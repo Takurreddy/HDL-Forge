@@ -125,7 +125,14 @@ export default function ProblemsPage() {
     void loadProblems();
   }, [loadProblems]);
 
-  // Client-side company filtering
+  const getProblemStatus = (problem: Problem): "solved" | "attempted" | "not-started" => {
+    const i = problems.indexOf(problem);
+    if (i === 0 || i === 1) return "solved";
+    if (i === 2 || i === 3) return "attempted";
+    return "not-started";
+  };
+
+  // Client-side company + status filtering
   const filteredProblems = problems.filter((p) => {
     if (selectedCompany !== "All Companies") {
       if (!p.companyTags || p.companyTags.length === 0) return false;
@@ -133,6 +140,12 @@ export default function ProblemsPage() {
         (comp) => comp.toLowerCase() === selectedCompany.toLowerCase()
       );
       if (!matches) return false;
+    }
+    if (statusFilter !== "all") {
+      const status = getProblemStatus(p);
+      if (statusFilter === "todo" && status !== "not-started") return false;
+      if (statusFilter === "solved" && status !== "solved") return false;
+      if (statusFilter === "attempted" && status !== "attempted") return false;
     }
     return true;
   });
@@ -374,12 +387,7 @@ export default function ProblemsPage() {
                       const isChip =
                         problem.category?.toLowerCase().includes("chip") ||
                         problem.slug.includes("chip");
-                      const status =
-                        idx === 0 || idx === 1
-                          ? "solved"
-                          : idx === 2 || idx === 3
-                            ? "attempted"
-                            : "not-started";
+                      const status = getProblemStatus(problem);
 
                       return (
                         <tr
