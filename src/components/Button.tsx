@@ -14,11 +14,11 @@ export default function Button({
   ...props
 }: ButtonProps) {
   const base =
-    "inline-flex items-center justify-center rounded-xl font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[#070707] disabled:pointer-events-none disabled:opacity-40";
+    "inline-flex items-center justify-center rounded-xl font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-40";
 
   const variants = {
     primary:
-      "bg-accent text-[#070707] hover:bg-accent-hover hover:shadow-[0_0_20px_rgba(0,217,165,0.25)] font-semibold",
+      "bg-accent text-on-accent hover:bg-accent-hover hover:shadow-[0_0_20px_rgba(34,197,94,0.25)] font-semibold",
     secondary:
       "border border-border bg-surface text-text-secondary hover:border-border hover:bg-panel hover:text-text-primary",
     ghost: "text-text-muted hover:bg-accent/5 hover:text-text-primary",

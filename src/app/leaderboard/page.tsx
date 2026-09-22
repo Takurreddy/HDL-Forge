@@ -100,7 +100,7 @@ export default function LeaderboardPage() {
             placeholder="Search users..."
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            className="h-9 w-full rounded-xl border border-border bg-panel pl-9 pr-3 text-xs text-text-primary placeholder-text-dim outline-none transition-all focus:border-accent/40 focus:shadow-[0_0_12px_rgba(0,217,165,0.1)]"
+            className="h-9 w-full rounded-xl border border-border bg-panel pl-9 pr-3 text-xs text-text-primary placeholder-text-dim outline-none transition-all focus:border-accent/40 focus:shadow-[0_0_12px_rgba(34,197,94,0.1)]"
           />
         </div>
       </div>
@@ -232,7 +232,7 @@ export default function LeaderboardPage() {
           <p className="text-sm text-text-muted">No users on the leaderboard yet.</p>
           <Link
             href="/problems"
-            className="mt-4 inline-flex h-8 items-center gap-2 rounded-xl bg-accent px-4 text-xs font-semibold text-[#070707] transition-all hover:bg-accent-hover"
+            className="mt-4 inline-flex h-8 items-center gap-2 rounded-xl bg-accent px-4 text-xs font-semibold text-on-accent transition-all hover:bg-accent-hover"
           >
             Be the First
           </Link>

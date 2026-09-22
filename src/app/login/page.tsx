@@ -53,7 +53,7 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="h-9 w-full rounded-xl border border-border bg-panel px-3 text-xs text-text-primary placeholder-text-dim outline-none transition-all focus:border-accent/40 focus:shadow-[0_0_12px_rgba(0,217,165,0.1)]"
+              className="h-9 w-full rounded-xl border border-border bg-panel px-3 text-xs text-text-primary placeholder-text-dim outline-none transition-all focus:border-accent/40 focus:shadow-[0_0_12px_rgba(34,197,94,0.1)]"
               placeholder="you@example.com"
             />
           </div>
@@ -66,7 +66,7 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
-              className="h-9 w-full rounded-xl border border-border bg-panel px-3 text-xs text-text-primary placeholder-text-dim outline-none transition-all focus:border-accent/40 focus:shadow-[0_0_12px_rgba(0,217,165,0.1)]"
+              className="h-9 w-full rounded-xl border border-border bg-panel px-3 text-xs text-text-primary placeholder-text-dim outline-none transition-all focus:border-accent/40 focus:shadow-[0_0_12px_rgba(34,197,94,0.1)]"
               placeholder="Enter your password"
             />
           </div>
@@ -74,7 +74,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="flex h-9 w-full items-center justify-center gap-2 rounded-xl bg-accent text-xs font-semibold text-[#070707] transition-all hover:bg-accent-hover hover:shadow-[0_0_20px_rgba(0,217,165,0.25)] disabled:opacity-50"
+            className="flex h-9 w-full items-center justify-center gap-2 rounded-xl bg-accent text-xs font-semibold text-on-accent transition-all hover:bg-accent-hover hover:shadow-[0_0_20px_rgba(34,197,94,0.25)] disabled:opacity-50"
           >
             {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <LogIn className="h-3.5 w-3.5" />}
             {loading ? "Signing in..." : "Sign in"}

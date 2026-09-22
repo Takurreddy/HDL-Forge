@@ -12,7 +12,7 @@ export default function ProblemCard({ problem }: ProblemCardProps) {
   return (
     <Link
       href={problem.locked ? "#" : `/problems/${problem.slug}`}
-      className={`group block rounded-xl border border-border bg-panel p-5 transition-all hover:border-accent/20 hover:shadow-[0_0_20px_rgba(0,217,165,0.05)] ${problem.locked ? "opacity-60 cursor-not-allowed" : ""}`}
+      className={`group block rounded-xl border border-border bg-panel p-5 transition-all hover:border-accent/20 hover:shadow-[0_0_20px_rgba(34,197,94,0.05)] ${problem.locked ? "opacity-60 cursor-not-allowed" : ""}`}
     >
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">

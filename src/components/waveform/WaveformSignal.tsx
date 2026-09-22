@@ -217,13 +217,13 @@ function MultiBitSegment({
   const color = isX ? "text-warning" : isZ ? "text-text-dim" : "text-accent";
 
   return (
-    <g>
+    <g style={{ stroke: "var(--color-accent)" }}>
       <line
         x1={x}
         y1={7}
         x2={x + width}
         y2={7}
-        stroke="rgb(0,217,165)"
+        stroke="currentColor"
         strokeWidth="0.3"
         vectorEffect="non-scaling-stroke"
       />
@@ -232,7 +232,7 @@ function MultiBitSegment({
         y1={13}
         x2={x + width}
         y2={13}
-        stroke="rgb(0,217,165)"
+        stroke="currentColor"
         strokeWidth="0.3"
         vectorEffect="non-scaling-stroke"
       />

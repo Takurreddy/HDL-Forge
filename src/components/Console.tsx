@@ -33,7 +33,7 @@ export default function Console({ result, isRunning }: ConsoleProps) {
     <div className={`rounded-xl border ${status.border} ${status.bg} overflow-hidden`}>
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="flex w-full items-center gap-2 border-b border-border px-4 py-2.5 transition-colors hover:bg-surface/50"
+        className="flex w-full items-center gap-2 border-b border-border px-4 py-3 transition-colors hover:bg-surface/50"
       >
         <Terminal className="h-3.5 w-3.5 text-text-muted" />
         <span className="text-xs font-medium text-text-secondary">Console</span>
@@ -76,14 +76,14 @@ export default function Console({ result, isRunning }: ConsoleProps) {
                     <XCircle className="h-3.5 w-3.5" />
                     Compilation Error
                   </div>
-                  <pre className="mt-2 overflow-x-auto font-mono text-[11px] leading-relaxed text-text-secondary">
+                  <pre className="mt-2 overflow-x-auto font-mono text-xs leading-relaxed text-text-secondary">
                     {result.compilationMessage}
                   </pre>
                 </div>
               )}
 
               {result.compilationMessage && result.status !== "COMPILATION_ERROR" && (
-                <div className="text-[11px] text-text-muted">
+                <div className="text-xs text-text-muted">
                   {result.compilationMessage}
                 </div>
               )}
@@ -143,7 +143,7 @@ export default function Console({ result, isRunning }: ConsoleProps) {
                           {test.name}
                         </div>
                         {test.expected && test.received && (
-                          <div className="mt-1.5 font-mono text-[11px] text-text-muted">
+                          <div className="mt-1.5 font-mono text-xs text-text-muted">
                             <div>
                               Expected: <span className="text-text-secondary">{test.expected}</span>
                             </div>

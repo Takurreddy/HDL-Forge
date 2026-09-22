@@ -121,7 +121,7 @@ export default function LearnPage() {
                 </div>
                 <Link
                   href={`/learn/${recommendations.nextLesson.pathSlug}/${recommendations.nextLesson.moduleSlug}/${recommendations.nextLesson.slug}`}
-                  className="flex h-8 items-center gap-1.5 rounded-xl bg-accent px-4 text-xs font-semibold text-[#070707] transition-all hover:bg-accent-hover hover:shadow-[0_0_16px_rgba(0,217,165,0.3)]"
+                  className="flex h-8 items-center gap-1.5 rounded-xl bg-accent px-4 text-xs font-semibold text-on-accent transition-all hover:bg-accent-hover hover:shadow-[0_0_16px_rgba(34,197,94,0.3)]"
                 >
                   Continue
                   <ArrowRight className="h-3.5 w-3.5" />
@@ -158,7 +158,7 @@ export default function LearnPage() {
                   <Link
                     key={path.slug}
                     href={`/learn/${path.slug}`}
-                    className="block rounded-xl border border-border bg-panel p-5 transition-all hover:border-accent/20 hover:shadow-[0_0_20px_rgba(0,217,165,0.05)]"
+                    className="block rounded-xl border border-border bg-panel p-5 transition-all hover:border-accent/20 hover:shadow-[0_0_20px_rgba(34,197,94,0.05)]"
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
@@ -179,7 +179,7 @@ export default function LearnPage() {
                             <p className="text-[10px] text-text-dim">{pathProgress.completedLessons}/{pathProgress.totalLessons}</p>
                           </>
                         ) : (
-                          <span className="inline-flex h-7 items-center rounded-xl bg-accent px-3 text-[10px] font-semibold text-[#070707]">
+                          <span className="inline-flex h-7 items-center rounded-xl bg-accent px-3 text-[10px] font-semibold text-on-accent">
                             Start
                           </span>
                         )}

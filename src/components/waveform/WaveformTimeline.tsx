@@ -31,7 +31,7 @@ export default function WaveformTimeline({
 
   return (
     <div
-      className="relative h-8 cursor-crosshair border-b border-border bg-[#070707]"
+      className="relative h-8 cursor-crosshair border-b border-border bg-editor"
       onClick={handleTimelineClick}
     >
       <div className="absolute inset-0 flex items-end">

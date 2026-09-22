@@ -17,26 +17,37 @@ import {
   Send,
   FileText,
   Lock,
-  ChevronLeft,
   ChevronDown,
   ChevronRight,
   Zap,
   Trophy,
   ArrowLeft,
   BookOpen,
-  Clock,
-  MemoryStick,
   MessageSquare,
   ThumbsUp,
   CheckCircle2,
   XCircle,
   History,
-  Code2,
-  Eye,
-  EyeOff,
+  Loader2,
 } from "lucide-react";
 
 type LeftTab = "description" | "submissions" | "solution" | "discussion";
+type EditorFile = "design" | "testbench";
+
+const DIFFICULTY_COLOR: Record<string, string> = {
+  easy: "text-success",
+  medium: "text-warning",
+  hard: "text-error",
+};
+
+const DIFFICULTY_LABEL: Record<string, string> = {
+  easy: "Easy",
+  medium: "Medium",
+  hard: "Hard",
+};
+
+const capitalize = (value: string) =>
+  value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
 
 export default function ProblemPage({
   params,
@@ -51,6 +62,7 @@ export default function ProblemPage({
 
   const [code, setCode] = useState("");
   const [testbenchCode, setTestbenchCode] = useState("");
+  const [activeFile, setActiveFile] = useState<EditorFile>("design");
   const [result, setResult] = useState<SubmissionResult | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [activeTab, setActiveTab] = useState<LeftTab>("description");
@@ -78,7 +90,6 @@ export default function ProblemPage({
   const [newDiscussion, setNewDiscussion] = useState("");
   const [postingDiscussion, setPostingDiscussion] = useState(false);
   const [showSolution, setShowSolution] = useState(false);
-  const [expandedTestCase, setExpandedTestCase] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -105,6 +116,13 @@ export default function ProblemPage({
     load();
     return () => { cancelled = true; };
   }, [slug]);
+
+  useEffect(() => {
+    const tab = new URLSearchParams(window.location.search).get("tab");
+    if (tab === "discussion" || tab === "submissions" || tab === "solution") {
+      setActiveTab(tab);
+    }
+  }, []);
 
   const loadWaveform = useCallback(async (waveformId: string) => {
     setWaveformLoading(true);
@@ -168,15 +186,19 @@ export default function ProblemPage({
     if (activeTab === "discussion") void loadDiscussions();
   }, [activeTab, loadSubmissions, loadDiscussions]);
 
-  const handleRun = async () => {
-    if (!problem) return;
-    setIsRunning(true);
+  const resetRunState = () => {
     setResult(null);
     setWaveformData(null);
     setShowWaveform(false);
     setWaveformError(null);
     setXpNotification(null);
     if (notificationTimeoutRef.current) clearTimeout(notificationTimeoutRef.current);
+  };
+
+  const handleRun = async () => {
+    if (!problem) return;
+    setIsRunning(true);
+    resetRunState();
     try {
       const res = await runCode({ problemSlug: problem.slug, language: problem.language, code, testbenchCode });
       setResult(res);
@@ -194,12 +216,7 @@ export default function ProblemPage({
   const handleSubmit = async () => {
     if (!problem) return;
     setIsRunning(true);
-    setResult(null);
-    setWaveformData(null);
-    setShowWaveform(false);
-    setWaveformError(null);
-    setXpNotification(null);
-    if (notificationTimeoutRef.current) clearTimeout(notificationTimeoutRef.current);
+    resetRunState();
     try {
       const res = await submitCode({ problemSlug: problem.slug, language: problem.language, code, testbenchCode });
       setResult(res);
@@ -248,7 +265,7 @@ export default function ProblemPage({
 
   if (loading) {
     return (
-      <div className="flex h-[calc(100vh-3rem)] flex-col items-center justify-center gap-3">
+      <div className="flex h-[calc(100dvh-3rem)] flex-col items-center justify-center gap-3">
         <div className="h-5 w-5 animate-spin rounded-full border-2 border-accent border-t-transparent" />
         <p className="text-xs text-text-muted">Loading problem...</p>
       </div>
@@ -257,12 +274,12 @@ export default function ProblemPage({
 
   if (error || !problem) {
     return (
-      <div className="flex h-[calc(100vh-3rem)] flex-col items-center justify-center gap-4">
+      <div className="flex h-[calc(100dvh-3rem)] flex-col items-center justify-center gap-4">
         <h1 className="text-lg font-bold text-text-primary">{error || "Problem not found"}</h1>
         <p className="text-xs text-text-muted">The problem you&apos;re looking for doesn&apos;t exist.</p>
         <Link
           href="/problems"
-          className="inline-flex h-8 items-center gap-2 rounded-xl bg-accent px-4 text-xs font-semibold text-[#070707] transition-all hover:bg-accent-hover hover:shadow-[0_0_16px_rgba(0,217,165,0.3)]"
+          className="inline-flex h-8 items-center gap-2 rounded-lg bg-accent px-4 text-xs font-semibold text-on-accent transition-all hover:bg-accent-hover"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           Return to Problems
@@ -273,140 +290,175 @@ export default function ProblemPage({
 
   const leftTabs: { key: LeftTab; label: string; icon: typeof FileText }[] = [
     { key: "description", label: "Description", icon: FileText },
-        { key: "submissions", label: "Submissions", icon: History },
-    { key: "solution", label: "Solution", icon: BookOpen },
+    { key: "submissions", label: "Submissions", icon: History },
+    { key: "solution", label: "Solutions", icon: BookOpen },
     { key: "discussion", label: "Discussion", icon: MessageSquare },
   ];
 
+  const fileTabs: { key: EditorFile; filename: string }[] = [
+    { key: "design", filename: "design.sv" },
+    { key: "testbench", filename: "testbench.sv" },
+  ];
+
   return (
-    <div className="flex h-[calc(100vh-3rem)] flex-col bg-background/50 relative overflow-hidden">
-      {/* Top Tab Bar - Glassmorphism */}
-      <div className="glass-panel sticky top-0 z-10 flex items-center justify-between px-4 py-2 border-b border-border/50">
-        <div className="flex items-center gap-3">
-          <h1 className="text-sm font-bold text-text-primary">{problem.title}</h1>
-          {problem.locked && <Lock className="h-3.5 w-3.5 text-text-dim" />}
-          <DifficultyBadge difficulty={problem.difficulty} size="sm" />
+    <div className="flex h-[calc(100dvh-3rem)] flex-col bg-background">
+      {/* Header bar */}
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-border bg-panel px-4 py-2.5">
+        <div className="flex min-w-0 items-center gap-3">
+          <Link
+            href="/problems"
+            title="All problems"
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface hover:text-text-primary"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Link>
+          <div className="flex min-w-0 items-center gap-3">
+            <h1 className="truncate text-base font-semibold text-text-primary">
+              {problem.title}
+            </h1>
+            {problem.locked && <Lock className="h-3.5 w-3.5 shrink-0 text-text-dim" />}
+            <span className={`shrink-0 text-sm font-semibold ${DIFFICULTY_COLOR[problem.difficulty]}`}>
+              {DIFFICULTY_LABEL[problem.difficulty]}
+            </span>
+            <span className="hidden shrink-0 rounded-md border border-border bg-surface px-2 py-0.5 font-mono text-xs text-text-secondary sm:inline">
+              {problem.language === "systemverilog" ? "SystemVerilog" : "Verilog"}
+            </span>
+          </div>
         </div>
-        
-        <div className="flex gap-1 overflow-x-auto">
-          {leftTabs.map(({ key, label, icon: Icon }) => (
-            <button
-              key={key}
-              onClick={() => setActiveTab(activeTab === key ? "" as any : key)}
-              className={`flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 rounded-lg text-[10px] font-medium transition-all ${
-                activeTab === key
-                  ? "bg-accent/10 text-accent border border-accent/20 shadow-[0_0_10px_rgba(0,217,165,0.1)]"
-                  : "text-text-muted hover:text-text-primary hover:bg-surface/50 glass-button"
-              }`}
-            >
-              <Icon className="h-3 w-3" />
-              {label}
-            </button>
-          ))}
+
+        <div className="flex shrink-0 items-center gap-2">
+          {problem.timeComplexity && (
+            <span className="hidden rounded-lg border border-border bg-surface px-2.5 py-1 font-mono text-xs text-text-secondary sm:inline">
+              Time: <span className="text-accent">{problem.timeComplexity}</span>
+            </span>
+          )}
+          {problem.spaceComplexity && (
+            <span className="hidden rounded-lg border border-border bg-surface px-2.5 py-1 font-mono text-xs text-text-secondary sm:inline">
+              Space: <span className="text-accent">{problem.spaceComplexity}</span>
+            </span>
+          )}
+          <div className="hidden h-5 w-px bg-border sm:block" />
+          <button
+            onClick={handleRun}
+            disabled={isRunning || problem.locked}
+            className="inline-flex h-9 items-center gap-2 rounded-lg bg-accent px-4 text-sm font-semibold text-on-accent transition-all hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {isRunning ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Play className="h-4 w-4" />
+            )}
+            Run
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={isRunning || problem.locked}
+            className="inline-flex h-9 items-center gap-2 rounded-lg border border-border bg-surface px-4 text-sm font-medium text-text-secondary transition-all hover:border-accent/40 hover:bg-accent/5 hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <Send className="h-4 w-4" />
+            Submit
+          </button>
         </div>
-        
-        <Link href="/problems" className="text-[10px] text-text-muted hover:text-text-secondary glass-button px-2 py-1 rounded">
-          All Problems
-        </Link>
       </div>
 
-      <div className="flex flex-1 overflow-hidden relative">
-        {/* Sliding Side Panel for Tab Content */}
-        {activeTab && (
-          <div className="glass-panel w-[400px] flex-shrink-0 flex-col border-r border-border/50 z-10 absolute inset-y-0 left-0 shadow-2xl transition-transform duration-300 transform translate-x-0 flex overflow-hidden">
-             <div className="flex items-center justify-between p-3 border-b border-border/30">
-                <span className="text-xs font-bold text-text-primary">{leftTabs.find(t => t.key === activeTab)?.label}</span>
-                <button onClick={() => setActiveTab("" as any)} className="text-text-muted hover:text-text-primary p-1 rounded hover:bg-surface/50">
-                   <ChevronLeft className="h-4 w-4" />
-                </button>
-             </div>
-             <div className="flex-1 overflow-y-auto p-5">
-{/* Description Tab */}
+      {/* Body */}
+      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+        {/* Left panel */}
+        <div className="flex h-[45vh] w-full shrink-0 flex-col border-b border-border lg:h-auto lg:w-[44%] lg:min-w-[340px] lg:max-w-[620px] lg:border-b-0 lg:border-r">
+          <div className="flex shrink-0 items-center gap-1 border-b border-border px-3">
+            {leftTabs.map(({ key, label, icon: Icon }) => (
+              <button
+                key={key}
+                onClick={() => setActiveTab(key)}
+                className={`flex h-10 items-center gap-1.5 border-b-2 px-3 text-[13px] font-medium transition-colors ${
+                  activeTab === key
+                    ? "border-accent text-text-primary"
+                    : "border-transparent text-text-muted hover:bg-surface/60 hover:text-text-secondary"
+                }`}
+                style={{ marginBottom: -1 }}
+              >
+                <Icon className="h-4 w-4" />
+                {label}
+              </button>
+            ))}
+          </div>
+
+          <div className="min-h-0 flex-1 overflow-y-auto p-6">
+            {/* Description */}
             {activeTab === "description" && (
-              <div className="space-y-5">
+              <div className="space-y-6">
                 <div>
-                  <div className="mb-3 flex items-center gap-2">
-                    <h1 className="text-base font-bold text-text-primary">{problem.title}</h1>
-                    {problem.locked && <Lock className="h-3.5 w-3.5 text-text-dim" />}
-                  </div>
-                  <div className="flex gap-1.5 flex-wrap">
-                    <DifficultyBadge difficulty={problem.difficulty} size="md" />
+                  <h1 className="text-xl font-semibold text-text-primary">{problem.title}</h1>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <span className={`text-sm font-semibold ${DIFFICULTY_COLOR[problem.difficulty]}`}>
+                      {DIFFICULTY_LABEL[problem.difficulty]}
+                    </span>
                     <CategoryBadge category={problem.category} size="md" />
+                    <span className="rounded-md border border-border bg-surface px-2 py-0.5 font-mono text-xs text-text-secondary">
+                      {problem.language === "systemverilog" ? "SystemVerilog" : "Verilog"}
+                    </span>
                   </div>
+                  <p className="mt-4 text-[15px] leading-relaxed text-text-secondary">
+                    {problem.description}
+                  </p>
                 </div>
 
                 <div>
-                  <p className="text-sm leading-relaxed text-text-secondary">{problem.description}</p>
-                </div>
-
-                {/* Complexity */}
-                {(problem.timeComplexity || problem.spaceComplexity) && (
-                  <div className="flex gap-3">
-                    {problem.timeComplexity && (
-                      <div className="rounded-lg bg-surface px-3 py-2">
-                        <span className="text-[10px] text-text-dim">Time: </span>
-                        <span className="font-mono text-xs text-accent">{problem.timeComplexity}</span>
-                      </div>
-                    )}
-                    {problem.spaceComplexity && (
-                      <div className="rounded-lg bg-surface px-3 py-2">
-                        <span className="text-[10px] text-text-dim">Space: </span>
-                        <span className="font-mono text-xs text-accent">{problem.spaceComplexity}</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                <div>
-                  <h3 className="mb-2 text-[10px] font-bold uppercase tracking-widest text-text-dim">Input</h3>
-                  <p className="rounded-lg bg-surface p-3 font-mono text-xs text-text-secondary">{problem.inputDescription}</p>
+                  <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-text-dim">Input</h3>
+                  <p className="rounded-lg bg-surface p-3.5 font-mono text-sm text-text-secondary">{problem.inputDescription}</p>
                 </div>
 
                 <div>
-                  <h3 className="mb-2 text-[10px] font-bold uppercase tracking-widest text-text-dim">Output</h3>
-                  <p className="rounded-lg bg-surface p-3 font-mono text-xs text-text-secondary">{problem.outputDescription}</p>
+                  <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-text-dim">Output</h3>
+                  <p className="rounded-lg bg-surface p-3.5 font-mono text-sm text-text-secondary">{problem.outputDescription}</p>
                 </div>
-
-                {problem.constraints.length > 0 && (
-                  <div>
-                    <h3 className="mb-2 text-[10px] font-bold uppercase tracking-widest text-text-dim">Constraints</h3>
-                    <ul className="space-y-1">
-                      {problem.constraints.map((c, i) => (
-                        <li key={i} className="flex items-start gap-2 text-xs text-text-secondary">
-                          <span className="mt-1 h-1 w-1 shrink-0 rounded-full bg-accent/40" />
-                          {c}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
 
                 {problem.examples.length > 0 && (
                   <div>
-                    <h3 className="mb-2 text-[10px] font-bold uppercase tracking-widest text-text-dim">Examples</h3>
+                    <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-text-dim">Examples</h3>
                     <div className="space-y-2">
                       {problem.examples.map((ex, i) => (
-                        <div key={i} className="rounded-xl border border-border bg-surface p-3">
-                          <div className="mb-2 text-[10px] font-bold text-text-muted">{ex.title}</div>
-                          <div className="space-y-1 font-mono text-[11px]">
+                        <div key={i} className="rounded-xl border border-border bg-surface p-4">
+                          <div className="mb-2 text-sm font-semibold text-text-primary">{ex.title}</div>
+                          <div className="space-y-1.5 font-mono text-sm">
                             <div>
                               <span className="text-text-dim">Input: </span>
-                              <span className="text-text-secondary">{ex.input}</span>
+                              <span className="text-text-primary">{ex.input}</span>
                             </div>
                             <div>
                               <span className="text-text-dim">Output: </span>
-                              <span className="text-accent">{ex.output}</span>
+                              <span className="text-success">{ex.output}</span>
                             </div>
+                            {ex.explanation && (
+                              <div>
+                                <span className="text-text-dim">Explanation: </span>
+                                <span className="text-text-secondary">{ex.explanation}</span>
+                              </div>
+                            )}
                           </div>
                         </div>
                       ))}
                     </div>
                   </div>
                 )}
+
+                {problem.constraints.length > 0 && (
+                  <div>
+                    <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-text-dim">Constraints</h3>
+                    <ul className="space-y-1">
+                      {problem.constraints.map((c, i) => (
+                        <li key={i} className="flex items-start gap-2 text-sm text-text-secondary">
+                          <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent/40" />
+                          {c}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             )}
 
-            {/* Submissions Tab */}
+            {/* Submissions */}
             {activeTab === "submissions" && (
               <div className="space-y-3">
                 <h3 className="text-xs font-bold text-text-primary">Your Submissions</h3>
@@ -418,35 +470,35 @@ export default function ProblemPage({
                   </div>
                 ) : submissions.length > 0 ? (
                   submissions.map((sub) => (
-                    <div key={sub.id} className="rounded-xl border border-border bg-surface overflow-hidden">
+                    <div key={sub.id} className="overflow-hidden rounded-xl border border-border bg-surface">
                       <button
                         onClick={() => setExpandedSubmission(expandedSubmission === sub.id ? null : sub.id)}
                         className="flex w-full items-center justify-between px-4 py-3 text-left"
                       >
                         <div className="flex items-center gap-3">
                           {sub.status === "PASSED" ? (
-                            <CheckCircle2 className="h-4 w-4 text-accent" />
+                            <CheckCircle2 className="h-4 w-4 text-success" />
                           ) : (
                             <XCircle className="h-4 w-4 text-error" />
                           )}
                           <div>
                             <div className="flex items-center gap-2">
                               <span className={`text-xs font-semibold ${
-                                sub.status === "PASSED" ? "text-accent" : "text-error"
+                                sub.status === "PASSED" ? "text-success" : "text-error"
                               }`}>
                                 {sub.score}%
                               </span>
-                              <span className="text-[10px] text-text-dim">
+                              <span className="text-xs text-text-dim">
                                 {sub.testsPassed}/{sub.testsTotal} tests
                               </span>
                             </div>
-                            <span className="text-[10px] text-text-dim">
+                            <span className="text-xs text-text-dim">
                               {new Date(sub.createdAt).toLocaleString()}
                             </span>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] text-text-dim">{(sub.executionTime * 1000).toFixed(0)}ms</span>
+                          <span className="text-xs text-text-dim">{(sub.executionTime * 1000).toFixed(0)}ms</span>
                           {expandedSubmission === sub.id ? (
                             <ChevronDown className="h-3.5 w-3.5 text-text-dim" />
                           ) : (
@@ -456,7 +508,7 @@ export default function ProblemPage({
                       </button>
                       {expandedSubmission === sub.id && (
                         <div className="border-t border-border px-4 py-3">
-                          <pre className="overflow-x-auto rounded-lg bg-editor p-3 font-mono text-[11px] leading-relaxed text-text-secondary max-h-48 overflow-y-auto">
+                          <pre className="max-h-48 overflow-auto rounded-lg bg-editor p-3 font-mono text-[11px] leading-relaxed text-text-secondary">
                             {sub.code}
                           </pre>
                         </div>
@@ -469,13 +521,13 @@ export default function ProblemPage({
               </div>
             )}
 
-            {/* Solution Tab */}
+            {/* Solutions */}
             {activeTab === "solution" && (
               <div className="space-y-4">
                 {isSolved || showSolution ? (
                   <div>
-                    <div className="flex items-center gap-2 mb-3">
-                      <CheckCircle2 className="h-4 w-4 text-accent" />
+                    <div className="mb-3 flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-success" />
                       <h3 className="text-xs font-bold text-text-primary">Reference Solution</h3>
                     </div>
                     {problem.referenceSolution ? (
@@ -492,7 +544,7 @@ export default function ProblemPage({
                     <p className="text-xs text-text-muted">Solution available after solving.</p>
                     <button
                       onClick={() => setShowSolution(true)}
-                      className="mt-3 text-[10px] text-accent hover:underline"
+                      className="mt-3 text-xs text-accent hover:underline"
                     >
                       Show anyway
                     </button>
@@ -501,7 +553,7 @@ export default function ProblemPage({
               </div>
             )}
 
-            {/* Discussion Tab */}
+            {/* Discussion */}
             {activeTab === "discussion" && (
               <div className="space-y-4">
                 {user && (
@@ -510,16 +562,20 @@ export default function ProblemPage({
                       value={newDiscussion}
                       onChange={(e) => setNewDiscussion(e.target.value)}
                       placeholder="Share your approach or ask a question..."
-                      className="w-full bg-transparent text-xs text-text-primary placeholder-text-dim outline-none resize-none"
+                      className="w-full resize-none bg-transparent text-xs text-text-primary placeholder-text-dim outline-none"
                       rows={3}
                     />
-                    <div className="flex justify-end mt-2">
+                    <div className="mt-2 flex justify-end">
                       <button
                         onClick={handlePostDiscussion}
                         disabled={postingDiscussion || !newDiscussion.trim()}
-                        className="inline-flex h-7 items-center gap-1.5 rounded-lg bg-accent px-3 text-[10px] font-semibold text-[#070707] transition-all hover:bg-accent-hover disabled:opacity-40"
+                        className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-accent px-3 text-xs font-semibold text-on-accent transition-all hover:bg-accent-hover disabled:opacity-40"
                       >
-                        <Send className="h-3 w-3" />
+                        {postingDiscussion ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <Send className="h-3 w-3" />
+                        )}
                         Post
                       </button>
                     </div>
@@ -543,26 +599,26 @@ export default function ProblemPage({
                           >
                             <ThumbsUp className="h-3.5 w-3.5" />
                           </button>
-                          <span className="text-[10px] font-semibold text-text-secondary">{d.upvotes}</span>
+                          <span className="text-xs font-semibold text-text-secondary">{d.upvotes}</span>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
+                        <div className="min-w-0 flex-1">
+                          <div className="mb-1 flex items-center gap-2">
                             <span className="text-[10px] font-semibold text-text-primary">@{d.username}</span>
                             {d.isSolution && (
-                              <span className="rounded-md bg-accent/10 px-1.5 py-0.5 text-[9px] font-semibold text-accent">SOLUTION</span>
+                              <span className="rounded-md bg-accent/10 px-1.5 py-0.5 text-[10px] font-semibold text-accent">SOLUTION</span>
                             )}
-                            <span className="text-[10px] text-text-dim">{new Date(d.createdAt).toLocaleDateString()}</span>
+                            <span className="text-xs text-text-dim">{new Date(d.createdAt).toLocaleDateString()}</span>
                           </div>
-                          <p className="text-xs text-text-secondary whitespace-pre-wrap">{d.content}</p>
+                          <p className="whitespace-pre-wrap text-xs text-text-secondary">{d.content}</p>
                           {d.replies.length > 0 && (
                             <div className="mt-3 space-y-2 border-l-2 border-border pl-3">
                               {d.replies.map((r) => (
                                 <div key={r.id}>
-                                  <div className="flex items-center gap-2 mb-1">
+                                  <div className="mb-1 flex items-center gap-2">
                                     <span className="text-[10px] font-semibold text-text-primary">@{r.username}</span>
-                                    <span className="text-[10px] text-text-dim">{new Date(r.createdAt).toLocaleDateString()}</span>
+                                    <span className="text-xs text-text-dim">{new Date(r.createdAt).toLocaleDateString()}</span>
                                   </div>
-                                  <p className="text-[11px] text-text-secondary whitespace-pre-wrap">{r.content}</p>
+                                  <p className="whitespace-pre-wrap text-[11px] text-text-secondary">{r.content}</p>
                                 </div>
                               ))}
                             </div>
@@ -572,132 +628,121 @@ export default function ProblemPage({
                     </div>
                   ))
                 ) : (
-                  <p className="text-xs text-text-dim text-center py-8">No discussions yet. Be the first to share!</p>
+                  <p className="py-8 text-center text-xs text-text-dim">No discussions yet. Be the first to share!</p>
                 )}
               </div>
             )}
-
-             </div>
-          </div>
-        )}
-
-        {/* Right Panel - Side-by-Side Editors */}
-        <div className={`flex flex-1 overflow-hidden transition-all duration-300 ${activeTab ? 'ml-[400px]' : 'ml-0'}`}>
-          <div className="flex flex-1 flex-col overflow-hidden border-r border-border/50">
-            <div className="flex items-center justify-between px-3 py-1.5 border-b border-border/30 bg-surface/30">
-               <span className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider">Design (Code)</span>
-               <span className="text-[9px] text-text-dim">{problem.language}</span>
-            </div>
-            <CodeEditor value={code} onChange={setCode} />
-          </div>
-          <div className="flex flex-1 flex-col overflow-hidden">
-            <div className="flex items-center justify-between px-3 py-1.5 border-b border-border/30 bg-surface/30">
-               <span className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider">Testbench</span>
-               <span className="text-[9px] text-text-dim">SystemVerilog</span>
-            </div>
-            <CodeEditor value={testbenchCode} onChange={setTestbenchCode} />
           </div>
         </div>
-      </div>
 
-{/* Bottom Bar - Actions & Console */}
-      <div className="glass-panel flex items-center gap-3 border-t border-border/50 px-4 py-2.5 z-10 perspective-container">
-        <button
-          onClick={handleRun}
-          disabled={isRunning || problem.locked}
-          className="btn-3d inline-flex h-8 items-center gap-2 rounded-xl bg-accent px-4 text-xs font-semibold text-[#070707] transition-all hover:bg-accent-hover hover:shadow-[0_0_16px_rgba(0,217,165,0.3)] disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          <Play className="h-3.5 w-3.5" />
-          Run
-        </button>
-        <button
-          onClick={handleSubmit}
-          disabled={isRunning || problem.locked}
-          className="btn-3d inline-flex h-8 items-center gap-2 rounded-xl border border-border bg-surface px-4 text-xs font-medium text-text-secondary transition-all hover:border-accent/30 hover:bg-accent/5 hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          <Send className="h-3.5 w-3.5" />
-          Submit
-        </button>
-
-        {/* Waveform toggle */}
-        {result?.waveformId && result.status !== "error" && !showWaveform && (
-          <button
-            onClick={() => result.waveformId && loadWaveform(result.waveformId)}
-            disabled={waveformLoading}
-            className="inline-flex h-8 items-center gap-2 rounded-xl border border-border bg-surface px-4 text-xs font-medium text-text-secondary transition-all hover:border-accent/30 hover:bg-accent/5 hover:text-text-primary disabled:opacity-50"
-          >
-            {waveformLoading ? (
-              <div className="h-3 w-3 animate-spin rounded-full border-2 border-accent border-t-transparent" />
-            ) : (
-              <Zap className="h-3.5 w-3.5" />
-            )}
-            Waveform
-          </button>
-        )}
-
-        {/* Score display */}
-        {result && result.status !== "error" && (
-          <div className="ml-auto flex items-center gap-4">
-            {result.executionTime > 0 && (
-              <div className="flex items-center gap-1.5 text-[10px] text-text-dim">
-                <Clock className="h-3 w-3" />
-                <span>{(result.executionTime * 1000).toFixed(0)}ms</span>
-              </div>
-            )}
-            <div className={`text-xs font-bold ${
-              result.testsPassed === result.testsTotal ? "text-accent" : "text-text-secondary"
-            }`}>
-              {result.testsPassed}/{result.testsTotal}
+        {/* Right panel */}
+        <div className="flex min-w-0 flex-1 flex-col">
+          {/* Editor tab bar */}
+          <div className="flex h-9 shrink-0 items-center justify-between border-b border-border bg-surface/40 px-3">
+            <div className="flex items-center gap-0.5">
+              {fileTabs.map(({ key, filename }) => {
+                const Icon = key === "design" ? FileText : Send;
+                return (
+                  <button
+                    key={key}
+                    onClick={() => setActiveFile(key)}
+                    className={`flex h-full items-center gap-1.5 border-b-2 px-3 font-mono text-[13px] transition-colors ${
+                      activeFile === key
+                        ? "border-accent text-text-primary"
+                        : "border-transparent text-text-muted hover:bg-surface/60 hover:text-text-secondary"
+                    }`}
+                    style={{ marginBottom: -1 }}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    {filename}
+                  </button>
+                );
+              })}
             </div>
-          </div>
-        )}
-      </div>
 
-      {/* Results Panel */}
-      <div className="max-h-64 overflow-y-auto border-t border-border bg-panel p-4">
-        {xpNotification && (
-          <div className="mb-3 rounded-xl border border-accent/20 bg-accent/5 p-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/10">
-                  <Trophy className="h-4 w-4 text-accent" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-accent">+{xpNotification.xpEarned} XP Earned!</p>
-                  <p className="text-[11px] text-text-muted">
-                    Level {xpNotification.level} · {xpNotification.xpTotal.toLocaleString()} XP total
-                  </p>
-                </div>
-              </div>
-              {xpNotification.achievements.length > 0 && (
-                <div className="flex items-center gap-2">
-                  {xpNotification.achievements.map((ach) => (
-                    <div key={ach.slug} className="flex items-center gap-1.5 rounded-lg bg-accent/10 px-2 py-1">
-                      <span className="text-sm">{ach.icon}</span>
-                      <span className="text-[10px] font-semibold text-accent">{ach.name}</span>
-                    </div>
-                  ))}
-                </div>
+            <div className="flex shrink-0 items-center gap-2">
+              {result?.waveformId && result.status !== "error" && !showWaveform && (
+                <button
+                  onClick={() => result.waveformId && loadWaveform(result.waveformId)}
+                  disabled={waveformLoading}
+                  className="inline-flex h-6 items-center gap-1.5 rounded-md border border-border bg-surface px-2 text-[10px] font-medium text-text-secondary transition-all hover:border-accent/40 hover:text-text-primary disabled:opacity-50"
+                >
+                  {waveformLoading ? (
+                    <Loader2 className="h-3 w-3 animate-spin text-accent" />
+                  ) : (
+                    <Zap className="h-3 w-3 text-accent" />
+                  )}
+                  Waveform
+                </button>
+              )}
+              {result && result.status !== "error" && (
+                <span className="font-mono text-xs text-text-secondary">
+                  <span className={result.testsPassed === result.testsTotal ? "text-success" : "text-warning"}>
+                    {result.testsPassed}/{result.testsTotal}
+                  </span>{" "}
+                  {result.executionTime > 0 && (
+                    <span className="text-text-dim">· {(result.executionTime * 1000).toFixed(0)}ms</span>
+                  )}
+                </span>
               )}
             </div>
           </div>
-        )}
-        <Console result={result} isRunning={isRunning} />
-        {waveformError && (
-          <div className="mt-2 text-xs text-warning">Waveform: {waveformError}</div>
-        )}
-      </div>
 
-      {/* Waveform Viewer */}
-      {showWaveform && waveformData && (
-        <div className="border-t border-border bg-panel p-4">
-          <WaveformViewer
-            data={waveformData}
-            onClose={() => { setShowWaveform(false); setWaveformData(null); }}
-          />
+          <div className="min-h-0 flex-1 bg-editor">
+            <CodeEditor
+              value={activeFile === "design" ? code : testbenchCode}
+              onChange={(v) => activeFile === "design" ? setCode(v) : setTestbenchCode(v)}
+            />
+          </div>
+
+          {/* Console */}
+          <div className="shrink-0 border-t border-border bg-panel">
+            <div className="max-h-56 overflow-y-auto p-4">
+              {xpNotification && (
+                <div className="mb-3 rounded-xl border border-accent/20 bg-accent/5 p-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/10">
+                        <Trophy className="h-4 w-4 text-accent" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-accent">+{xpNotification.xpEarned} XP Earned!</p>
+                        <p className="text-[11px] text-text-muted">
+                          Level {xpNotification.level} · {xpNotification.xpTotal.toLocaleString()} XP total
+                        </p>
+                      </div>
+                    </div>
+                    {xpNotification.achievements.length > 0 && (
+                      <div className="flex items-center gap-2">
+                        {xpNotification.achievements.map((ach) => (
+                          <div key={ach.slug} className="flex items-center gap-1.5 rounded-lg bg-accent/10 px-2 py-1">
+                            <span className="text-sm">{ach.icon}</span>
+                            <span className="text-[10px] font-semibold text-accent">{ach.name}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              <Console result={result} isRunning={isRunning} />
+              {waveformError && (
+                <div className="mt-2 text-xs text-warning">Waveform: {waveformError}</div>
+              )}
+            </div>
+          </div>
+
+          {/* Waveform */}
+          {showWaveform && waveformData && (
+            <div className="shrink-0 border-t border-border bg-panel p-3">
+              <WaveformViewer
+                data={waveformData}
+                onClose={() => { setShowWaveform(false); setWaveformData(null); }}
+              />
+            </div>
+          )}
         </div>
-      )}
-
+      </div>
     </div>
   );
 }

@@ -186,7 +186,7 @@ export default function AIAssistant({
       {/* Floating Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-2xl bg-accent text-[#070707] shadow-lg transition-all hover:bg-accent-hover hover:shadow-[0_0_24px_rgba(0,217,165,0.4)] hover:scale-105"
+        className="fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-2xl bg-accent text-on-accent shadow-lg transition-all hover:bg-accent-hover hover:shadow-[0_0_24px_rgba(34,197,94,0.4)] hover:scale-105"
         title="AI Tutor"
       >
         <Sparkles className="h-5 w-5" />
@@ -303,12 +303,12 @@ export default function AIAssistant({
                       onKeyDown={handleKeyDown}
                       placeholder="Ask a question..."
                       rows={1}
-                      className="flex-1 resize-none rounded-xl border border-border bg-surface px-3 py-2 text-xs text-text-primary placeholder-text-dim outline-none transition-all focus:border-accent/40 focus:shadow-[0_0_12px_rgba(0,217,165,0.1)]"
+                      className="flex-1 resize-none rounded-xl border border-border bg-surface px-3 py-2 text-xs text-text-primary placeholder-text-dim outline-none transition-all focus:border-accent/40 focus:shadow-[0_0_12px_rgba(34,197,94,0.1)]"
                     />
                     <button
                       onClick={() => handleSend("ask")}
                       disabled={!inputValue.trim() || isLoading}
-                      className="flex h-8 w-8 items-center justify-center rounded-xl bg-accent text-[#070707] transition-all hover:bg-accent-hover disabled:opacity-40"
+                      className="flex h-8 w-8 items-center justify-center rounded-xl bg-accent text-on-accent transition-all hover:bg-accent-hover disabled:opacity-40"
                     >
                       <Send className="h-3.5 w-3.5" />
                     </button>

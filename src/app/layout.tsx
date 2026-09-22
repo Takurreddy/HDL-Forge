@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { AuthProvider } from "@/lib/auth";
+import { ThemeProvider, themeInitScript } from "@/lib/theme";
 import Navbar from "@/components/Navbar";
 import "./globals.css";
 
@@ -30,13 +31,17 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${jetbrainsMono.variable} dark h-full antialiased`}
+      className={`${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col bg-[#070707] text-white">
-        <AuthProvider>
-          <Navbar />
-          <main className="flex-1">{children}</main>
-        </AuthProvider>
+      <body className="min-h-full flex flex-col bg-background text-foreground">
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <ThemeProvider>
+          <AuthProvider>
+            <Navbar />
+            <main className="flex-1">{children}</main>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
