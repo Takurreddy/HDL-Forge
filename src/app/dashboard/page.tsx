@@ -292,7 +292,7 @@ export default function DashboardPage() {
           <p className="text-sm text-text-muted">No data yet. Start solving problems!</p>
           <Link
             href="/problems"
-            className="mt-4 inline-flex h-8 items-center gap-2 rounded-xl bg-accent px-4 text-xs font-semibold text-on-accent transition-all hover:bg-accent-hover"
+            className="mt-4 inline-flex h-8 items-center gap-2 rounded-xl bg-accent px-4 text-xs font-semibold text-[#070707] transition-all hover:bg-accent-hover"
           >
             Browse Problems
           </Link>

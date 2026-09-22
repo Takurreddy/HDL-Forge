@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth";
-import { useTheme } from "@/lib/theme";
+import { fetchMyRank } from "@/lib/api";
 import {
   Code2,
   Trophy,
@@ -12,19 +12,20 @@ import {
   BookOpen,
   LayoutDashboard,
   LogIn,
-  UserPlus,
   LogOut,
   Menu,
   X,
   ChevronRight,
-  Sun,
-  Moon,
   MessageSquare,
+  BarChart3,
+  Flame,
 } from "lucide-react";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const navLinks = [
   { href: "/problems", label: "Problems", icon: Code2 },
-  { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
+  { href: "/contests", label: "Contests", icon: Trophy, badge: "NEW" },
+  { href: "/leaderboard", label: "Leaderboard", icon: BarChart3 },
   { href: "/discuss", label: "Discussion", icon: MessageSquare },
   { href: "/achievements", label: "Achievements", icon: Award },
   { href: "/learn", label: "Learn", icon: BookOpen },
@@ -38,9 +39,27 @@ function isActivePath(pathname: string, href: string): boolean {
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [streak, setStreak] = useState<number | null>(null);
   const { user, loading, logout } = useAuth();
-  const { theme, toggleTheme } = useTheme();
   const pathname = usePathname();
+
+  useEffect(() => {
+    if (!user) {
+      setStreak(null);
+      return;
+    }
+    let cancelled = false;
+    fetchMyRank()
+      .then((rank) => {
+        if (!cancelled) setStreak(rank.streak);
+      })
+      .catch(() => {
+        if (!cancelled) setStreak(0);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
 
   const linkClasses = (href: string) =>
     `flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-medium transition-colors ${
@@ -69,6 +88,11 @@ export default function Navbar() {
                 <Link key={link.href} href={link.href} className={linkClasses(link.href)}>
                   <Icon className="h-4 w-4" />
                   {link.label}
+                  {link.badge && (
+                    <span className="rounded bg-accent/15 px-1 py-0.5 text-[8px] font-mono font-bold uppercase text-accent">
+                      {link.badge}
+                    </span>
+                  )}
                 </Link>
               );
             })}
@@ -76,17 +100,16 @@ export default function Navbar() {
         </div>
 
         <div className="hidden items-center gap-2 lg:flex">
-          <button
-            onClick={toggleTheme}
-            title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface/60 hover:text-text-primary"
-          >
-            {theme === "dark" ? (
-              <Sun className="h-4 w-4" />
-            ) : (
-              <Moon className="h-4 w-4" />
-            )}
-          </button>
+          <ThemeToggle />
+          {!loading && (user ? streak : 4) !== null && (
+            <div
+              className="flex h-7 items-center gap-1.5 rounded-lg border border-warning/30 bg-warning/10 px-2 font-mono text-xs font-bold tabular-nums text-warning"
+              title="Daily streak"
+            >
+              <Flame className="h-4 w-4 fill-current" />
+              {user ? streak : 4}d
+            </div>
+          )}
           {loading ? (
             <div className="h-7 w-7 animate-pulse rounded-lg bg-border" />
           ) : user ? (
@@ -122,34 +145,17 @@ export default function Navbar() {
             <div className="flex items-center gap-1.5">
               <Link
                 href="/login"
-                className="flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-text-muted transition-colors hover:bg-surface/60 hover:text-text-primary"
-              >
-                <LogIn className="h-4 w-4" />
-                Login
-              </Link>
-              <Link
-                href="/signup"
                 className="flex h-9 items-center gap-1.5 rounded-lg bg-accent px-3.5 text-sm font-semibold text-on-accent transition-colors hover:bg-accent-hover"
               >
-                <UserPlus className="h-4 w-4" />
-                Sign Up
+                <LogIn className="h-4 w-4" />
+                SignIn/Up
               </Link>
             </div>
           )}
         </div>
 
         <div className="flex items-center gap-1 lg:hidden">
-          <button
-            onClick={toggleTheme}
-            title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface/60 hover:text-text-primary"
-          >
-            {theme === "dark" ? (
-              <Sun className="h-4 w-4" />
-            ) : (
-              <Moon className="h-4 w-4" />
-            )}
-          </button>
+          <ThemeToggle />
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
             className="flex h-9 w-9 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface/60 hover:text-text-primary"
@@ -181,7 +187,13 @@ export default function Navbar() {
                     <Icon className="h-4 w-4" />
                     {link.label}
                   </span>
-                  <ChevronRight className="h-3.5 w-3.5 text-text-dim" />
+                  {link.badge ? (
+                    <span className="rounded bg-accent/20 px-1.5 py-0.5 text-[9px] font-mono text-accent">
+                      {link.badge}
+                    </span>
+                  ) : (
+                    <ChevronRight className="h-3.5 w-3.5 text-text-dim" />
+                  )}
                 </Link>
               );
             })}
@@ -213,18 +225,10 @@ export default function Navbar() {
                 <Link
                   href="/login"
                   onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-text-secondary transition-colors hover:bg-surface/60 hover:text-text-primary"
+                  className="flex items-center justify-center gap-2 rounded-lg bg-accent px-3 py-2.5 text-center text-sm font-semibold text-on-accent transition-colors hover:bg-accent-hover"
                 >
                   <LogIn className="h-4 w-4" />
-                  Login
-                </Link>
-                <Link
-                  href="/signup"
-                  onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-2 rounded-lg bg-accent px-3 py-2.5 text-center text-sm font-semibold text-on-accent transition-colors hover:bg-accent-hover"
-                >
-                  <UserPlus className="h-4 w-4" />
-                  Sign Up
+                  SignIn/Up
                 </Link>
               </>
             )}

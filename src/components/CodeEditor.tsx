@@ -3,6 +3,7 @@
 import Editor from "@monaco-editor/react";
 import { useRef } from "react";
 import type { OnMount } from "@monaco-editor/react";
+
 import { useTheme } from "@/lib/theme";
 
 interface CodeEditorProps {
@@ -18,8 +19,8 @@ export default function CodeEditor({
   language = "systemverilog",
   height = "100%",
 }: CodeEditorProps) {
-  const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
   const { theme } = useTheme();
+  const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
 
   const handleEditorMount: OnMount = (editor) => {
     editorRef.current = editor;

@@ -147,6 +147,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error(error.message || "Registration failed");
     }
 
+    // signUp does not always return a session (e.g. when email confirmation is
+    // enabled). Establish one right away so signup and login share one session.
+    if (!data.session) {
+      const { data: signIn, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      if (signInError) {
+        if (/confirm|verification/i.test(signInError.message)) {
+          throw new Error("Almost there — check your inbox to confirm your email, then sign in.");
+        }
+        throw new Error(signInError.message || "Registration failed");
+      }
+      if (signIn.user) {
+        await loadUserProfile(signIn.user);
+      }
+      return;
+    }
+
     if (data.user) {
       await loadUserProfile(data.user);
     }

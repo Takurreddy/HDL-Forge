@@ -5,22 +5,35 @@ interface DifficultyBadgeProps {
   size?: "sm" | "md";
 }
 
-const DIFFICULTY_STYLES: Record<Difficulty, string> = {
-  easy: "text-success bg-success/10 border-success/20",
-  medium: "text-warning bg-warning/10 border-warning/20",
-  hard: "text-error bg-error/10 border-error/20",
+const DIFFICULTY_STYLES: Record<Difficulty, { text: string; bg: string; border: string }> = {
+  easy: {
+    text: "text-[#00B8A3]",
+    bg: "bg-[#00B8A3]/10",
+    border: "border-[#00B8A3]/20",
+  },
+  medium: {
+    text: "text-[#FFC01E]",
+    bg: "bg-[#FFC01E]/10",
+    border: "border-[#FFC01E]/20",
+  },
+  hard: {
+    text: "text-[#FF375F]",
+    bg: "bg-[#FF375F]/10",
+    border: "border-[#FF375F]/20",
+  },
 };
 
 export default function DifficultyBadge({
   difficulty,
   size = "sm",
 }: DifficultyBadgeProps) {
+  const style = DIFFICULTY_STYLES[difficulty] || DIFFICULTY_STYLES.easy;
   const sizeClasses =
-    size === "sm" ? "px-2 py-0.5 text-[10px]" : "px-2.5 py-1 text-xs";
+    size === "sm" ? "px-2.5 py-0.5 text-[11px]" : "px-3 py-1 text-xs";
 
   return (
     <span
-      className={`inline-flex items-center rounded-lg border font-semibold capitalize ${DIFFICULTY_STYLES[difficulty]} ${sizeClasses}`}
+      className={`inline-flex items-center rounded-full border font-semibold capitalize tracking-tight ${style.text} ${style.bg} ${style.border} ${sizeClasses}`}
     >
       {difficulty}
     </span>

@@ -271,7 +271,7 @@ class JudgeService:
             if te.result:
                 str_result = SubmissionTestResult(
                     submission_id=submission.id,
-                    test_case_id=te.test_case.id,
+                    test_case_id=te.test_case.id if te.test_case.id else None,
                     test_name=te.test_case.name,
                     status="PASSED" if te.result.passed else "FAILED",
                     score=te.score,

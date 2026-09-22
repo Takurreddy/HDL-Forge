@@ -131,7 +131,7 @@ export default function LessonPage({
         <h1 className="text-lg font-bold text-text-primary">{error || "Lesson not found"}</h1>
         <Link
           href="/learn"
-          className="inline-flex h-8 items-center gap-2 rounded-xl bg-accent px-4 text-xs font-semibold text-on-accent transition-all hover:bg-accent-hover"
+          className="inline-flex h-8 items-center gap-2 rounded-xl bg-accent px-4 text-xs font-semibold text-[#070707] transition-all hover:bg-accent-hover"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           Back to Learn
@@ -221,7 +221,7 @@ export default function LessonPage({
               <Link
                 key={problem.slug}
                 href={`/problems/${problem.slug}`}
-                className="flex items-center justify-between rounded-xl border border-border bg-panel px-4 py-3 transition-all hover:border-accent/20 hover:shadow-[0_0_12px_rgba(34,197,94,0.05)]"
+                className="flex items-center justify-between rounded-xl border border-border bg-panel px-4 py-3 transition-all hover:border-accent/20 hover:shadow-[0_0_12px_rgba(0,217,165,0.05)]"
               >
                 <div>
                   <p className="text-xs font-medium text-text-primary">{problem.title}</p>
@@ -301,7 +301,7 @@ export default function LessonPage({
               <button
                 onClick={() => void handleSubmitQuiz()}
                 disabled={submittingQuiz || quizAnswers.some((a) => !a)}
-                className="inline-flex h-8 items-center gap-2 rounded-xl bg-accent px-4 text-xs font-semibold text-on-accent transition-all hover:bg-accent-hover hover:shadow-[0_0_16px_rgba(34,197,94,0.3)] disabled:opacity-50"
+                className="inline-flex h-8 items-center gap-2 rounded-xl bg-accent px-4 text-xs font-semibold text-[#070707] transition-all hover:bg-accent-hover hover:shadow-[0_0_16px_rgba(0,217,165,0.3)] disabled:opacity-50"
               >
                 {submittingQuiz && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                 Submit Quiz
@@ -356,7 +356,7 @@ export default function LessonPage({
             <button
               onClick={() => void handleComplete()}
               disabled={completing}
-              className="inline-flex h-8 items-center gap-2 rounded-xl bg-accent px-4 text-xs font-semibold text-on-accent transition-all hover:bg-accent-hover hover:shadow-[0_0_16px_rgba(34,197,94,0.3)] disabled:opacity-50"
+              className="inline-flex h-8 items-center gap-2 rounded-xl bg-accent px-4 text-xs font-semibold text-[#070707] transition-all hover:bg-accent-hover hover:shadow-[0_0_16px_rgba(0,217,165,0.3)] disabled:opacity-50"
             >
               {completing && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
               Mark Complete
@@ -391,8 +391,8 @@ export default function LessonPage({
 
 function renderMarkdown(content: string): string {
   return content
-    .replace(/```systemverilog\n([\s\S]*?)```/g, '<pre class="rounded-xl bg-editor p-4 text-xs text-accent overflow-x-auto my-4 border border-border"><code>$1</code></pre>')
-    .replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre class="rounded-xl bg-editor p-4 text-xs text-text-secondary overflow-x-auto my-4 border border-border"><code>$2</code></pre>')
+    .replace(/```systemverilog\n([\s\S]*?)```/g, '<pre class="rounded-xl bg-[#070707] p-4 text-xs text-accent overflow-x-auto my-4 border border-border"><code>$1</code></pre>')
+    .replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre class="rounded-xl bg-[#070707] p-4 text-xs text-text-secondary overflow-x-auto my-4 border border-border"><code>$2</code></pre>')
     .replace(/`([^`]+)`/g, '<code class="rounded-lg bg-surface px-1.5 py-0.5 text-xs text-accent">$1</code>')
     .replace(/^### (.+)$/gm, '<h3 class="text-base font-bold text-text-primary mt-6 mb-3">$1</h3>')
     .replace(/^## (.+)$/gm, '<h2 class="text-lg font-bold text-text-primary mt-8 mb-4">$1</h2>')

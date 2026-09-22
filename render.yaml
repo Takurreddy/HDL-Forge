@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: hdlforge-backend
+    env: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: CORS_ORIGINS
+        value: "http://localhost:3000,https://hdl-forge.vercel.app,https://hdlforge.vercel.app"
+      - key: CORS_ORIGIN_REGEX
+        value: "^https://.*\\.vercel\\.app$"
+      - key: HDL_USE_DOCKER
+        value: "false"
+      - key: SIMULATOR
+        value: "icarus"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: AI_ENABLED
+        value: "true"
+      - key: AI_PROVIDER
+        value: "groq"
+      - key: GROQ_MODEL
+        value: "llama-3.3-70b-versatile"
+      - key: GROQ_API_KEY
+        sync: false

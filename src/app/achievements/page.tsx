@@ -116,7 +116,7 @@ function AchievementCard({ achievement }: { achievement: Achievement }) {
     <div
       className={`rounded-xl border p-4 transition-all ${
         achievement.unlocked
-          ? "border-accent/20 bg-accent/5 hover:shadow-[0_0_16px_rgba(34,197,94,0.08)]"
+          ? "border-accent/20 bg-accent/5 hover:shadow-[0_0_16px_rgba(0,217,165,0.08)]"
           : "border-border bg-panel"
       }`}
     >

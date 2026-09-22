@@ -40,6 +40,18 @@ export interface AchievementInfo {
   xpReward: number;
 }
 
+export interface CommunitySolution {
+  id: number;
+  title: string;
+  content: string;
+  code: string;
+  tags: string[];
+  username: string;
+  displayName: string | null;
+  upvotes: number;
+  createdAt: string;
+}
+
 export interface SubmissionResult {
   status: SubmissionStatus;
   compilationMessage?: string;
@@ -76,6 +88,9 @@ export interface Problem {
   referenceSolution?: string;
   publicTestCases?: PublicTestCase[];
   publicTestbenches?: PublicTestbench[];
+  companyTags?: string[];
+  acceptanceRate?: number;
+  solvedCount?: number;
   locked?: boolean;
 }
 
@@ -562,4 +577,52 @@ export interface UserRankResponse {
   progress: number;
   streak: number;
   achievements: number;
+}
+
+export interface DailyChallenge {
+  date: string;
+  problem: Problem;
+  streak: number;
+  bonusXp: number;
+  solvedToday: boolean;
+  participantsCount: number;
+}
+
+export interface ContestProblem {
+  id: string;
+  slug: string;
+  title: string;
+  difficulty: Difficulty;
+  points: number;
+  solvedCount: number;
+}
+
+export interface Contest {
+  id: string;
+  slug: string;
+  title: string;
+  edition: number;
+  description: string;
+  startTime: string;
+  endTime: string;
+  durationMinutes: number;
+  status: "upcoming" | "active" | "past";
+  registered: boolean;
+  registeredCount: number;
+  sponsor?: {
+    name: string;
+    logo?: string;
+    tagline: string;
+  };
+  problems: ContestProblem[];
+}
+
+export interface ContestLeaderboardEntry {
+  rank: number;
+  username: string;
+  displayName: string | null;
+  score: number;
+  finishTimeSeconds: number;
+  problemsSolved: number;
+  penaltyMinutes: number;
 }
