@@ -6,11 +6,21 @@ export async function updateSession(request: NextRequest) {
     request,
   });
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co";
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey =
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-    "placeholder-anon-key";
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  // Supabase is not configured (placeholder values): let the request pass
+  // through so auth falls back to the FastAPI backend.
+  if (
+    !supabaseUrl ||
+    !supabaseAnonKey ||
+    supabaseUrl.includes("placeholder") ||
+    supabaseAnonKey.includes("placeholder")
+  ) {
+    return supabaseResponse;
+  }
 
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {

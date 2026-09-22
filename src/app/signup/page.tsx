@@ -38,7 +38,7 @@ export default function SignupPage() {
       <div className="w-full max-w-md relative z-10">
         <div className="rounded-2xl border border-border bg-panel/90 p-8 shadow-2xl backdrop-blur-xl">
           <div className="mb-6 text-center">
-            <Link href="/" className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-accent/10 text-accent mb-3 shadow-[0_0_15px_rgba(0,217,165,0.15)]">
+            <Link href="/" className="animate-float inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-accent/10 text-accent mb-3 shadow-[0_0_15px_rgba(0,217,165,0.15)]">
               <Cpu className="h-6 w-6" />
             </Link>
             <h1 className="text-xl font-bold tracking-tight text-text-primary">Create Your Account</h1>

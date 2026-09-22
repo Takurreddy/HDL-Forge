@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, ReactNode } from "react";
 import { User } from "./types";
 import { createClient } from "./supabase/client";
+import { isSupabaseConfigured } from "./supabase/queries";
 
 interface AuthContextType {
   user: User | null;
@@ -14,6 +15,56 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const RAW_API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_BASE = RAW_API_BASE.replace(/\/+$/, "");
+
+interface BackendUser {
+  id: string;
+  username: string;
+  display_name?: string | null;
+  avatar_url?: string | null;
+  created_at?: string;
+  last_login_at?: string | null;
+}
+
+interface BackendAuthResponse {
+  user: BackendUser;
+  token: string;
+}
+
+function mapBackendUser(u: BackendUser): User {
+  return {
+    id: u.id,
+    email: "",
+    username: u.username,
+    displayName: u.display_name ?? null,
+    avatarUrl: u.avatar_url ?? null,
+    createdAt: u.created_at || new Date().toISOString(),
+    lastLoginAt: u.last_login_at ?? null,
+    xp: 0,
+    level: 1,
+    solvedCount: 0,
+  };
+}
+
+async function backendFetch<T>(path: string, options?: RequestInit): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    const detail = (body as { detail?: unknown }).detail;
+    const message =
+      typeof detail === "string" ? detail : `Request failed with status ${res.status}`;
+    throw new Error(message);
+  }
+
+  return res.json() as Promise<T>;
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -73,6 +124,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [supabase]);
 
   const refreshUser = useCallback(async () => {
+    if (!isSupabaseConfigured()) {
+      try {
+        const backendUser = await backendFetch<BackendUser>("/api/auth/me");
+        setUser(mapBackendUser(backendUser));
+      } catch {
+        setUser(null);
+      }
+      return;
+    }
+
     try {
       const { data: { user: authUser } } = await supabase.auth.getUser();
       await loadUserProfile(authUser);
@@ -83,6 +144,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
+
+    if (!isSupabaseConfigured()) {
+      void (async () => {
+        try {
+          const backendUser = await backendFetch<BackendUser>("/api/auth/me");
+          if (mounted) {
+            setUser(mapBackendUser(backendUser));
+          }
+        } catch (err) {
+          console.warn("Auth initialization error:", err);
+          if (mounted) setUser(null);
+        } finally {
+          if (mounted) setLoading(false);
+        }
+      })();
+
+      return () => {
+        mounted = false;
+      };
+    }
 
     async function initAuth() {
       try {
@@ -117,6 +198,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [supabase, loadUserProfile]);
 
   const login = useCallback(async (email: string, password: string) => {
+    if (!isSupabaseConfigured()) {
+      const data = await backendFetch<BackendAuthResponse>("/api/auth/login", {
+        method: "POST",
+        body: JSON.stringify({ email, password }),
+      });
+      setUser(mapBackendUser(data.user));
+      return;
+    }
+
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -132,6 +222,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [supabase, loadUserProfile]);
 
   const register = useCallback(async (email: string, username: string, password: string, displayName?: string) => {
+    if (!isSupabaseConfigured()) {
+      const data = await backendFetch<BackendAuthResponse>("/api/auth/register", {
+        method: "POST",
+        body: JSON.stringify({
+          email,
+          username,
+          password,
+          display_name: displayName || username,
+        }),
+      });
+      setUser(mapBackendUser(data.user));
+      return;
+    }
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -169,6 +273,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [supabase, loadUserProfile]);
 
   const logout = useCallback(async () => {
+    if (!isSupabaseConfigured()) {
+      await backendFetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+      setUser(null);
+      return;
+    }
+
     await supabase.auth.signOut();
     setUser(null);
   }, [supabase]);
