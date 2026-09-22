@@ -96,9 +96,15 @@ class ExecutionRunner:
         if compile_result.status != SimulationStatus.COMPILATION_OK:
             return compile_result
 
-        return simulator.simulate(
-            binary_path=workspace.workspace_path / "obj_dir" / "Vtestbench",
-        )
+        # Each simulator knows where it places its compiled output.
+        # Verilator → obj_dir/Vtestbench  |  Icarus → simulation.out
+        from app.simulator.icarus import IcarusSimulator
+        if isinstance(simulator, IcarusSimulator):
+            binary_path = workspace.workspace_path / "simulation.out"
+        else:
+            binary_path = workspace.workspace_path / "obj_dir" / "Vtestbench"
+
+        return simulator.simulate(binary_path=binary_path)
 
     def _execute_in_sandbox(
         self,
