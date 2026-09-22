@@ -1,4 +1,8 @@
-"""add xp, level, achievements, user_achievements
+"""add achievements and user_achievements
+
+The xp/level/solved_count/total_submissions columns move with the profiles
+table created in 005 (matching the ORM), so this revision only creates the
+achievements tables and seeds the achievement definitions.
 
 Revision ID: 006
 Revises: 005
@@ -17,11 +21,6 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.add_column("users", sa.Column("xp", sa.Integer(), nullable=False, server_default="0", index=True))
-    op.add_column("users", sa.Column("level", sa.Integer(), nullable=False, server_default="1", index=True))
-    op.add_column("users", sa.Column("solved_count", sa.Integer(), nullable=False, server_default="0"))
-    op.add_column("users", sa.Column("total_submissions", sa.Integer(), nullable=False, server_default="0"))
-
     op.create_table(
         "achievements",
         sa.Column("id", sa.Integer(), primary_key=True, autoincrement=True),
@@ -38,7 +37,7 @@ def upgrade() -> None:
     op.create_table(
         "user_achievements",
         sa.Column("id", sa.Integer(), primary_key=True, autoincrement=True),
-        sa.Column("user_id", sa.Integer(), sa.ForeignKey("users.id"), index=True, nullable=False),
+        sa.Column("user_id", sa.String(length=36), sa.ForeignKey("profiles.id"), index=True, nullable=False),
         sa.Column("achievement_id", sa.Integer(), sa.ForeignKey("achievements.id"), index=True, nullable=False),
         sa.Column("unlocked_at", sa.DateTime(timezone=True), server_default=sa.func.now()),
         sa.UniqueConstraint("user_id", "achievement_id", name="uq_user_achievement"),
@@ -64,7 +63,3 @@ def upgrade() -> None:
 def downgrade() -> None:
     op.drop_table("user_achievements")
     op.drop_table("achievements")
-    op.drop_column("users", "total_submissions")
-    op.drop_column("users", "solved_count")
-    op.drop_column("users", "level")
-    op.drop_column("users", "xp")

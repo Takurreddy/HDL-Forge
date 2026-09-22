@@ -47,6 +47,7 @@ def upgrade() -> None:
         "submissions",
         sa.Column("id", sa.Integer(), primary_key=True, index=True),
         sa.Column("problem_id", sa.Integer(), sa.ForeignKey("problems.id"), index=True),
+        sa.Column("user_id", sa.String(length=36), nullable=True, index=True),
         sa.Column("code", sa.Text()),
         sa.Column("language", sa.Enum("VERILOG", "SYSTEMVERILOG", name="language")),
         sa.Column("status", submission_status_enum),

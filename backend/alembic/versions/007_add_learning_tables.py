@@ -90,7 +90,7 @@ def upgrade() -> None:
     op.create_table(
         "lesson_progress",
         sa.Column("id", sa.Integer(), primary_key=True, autoincrement=True),
-        sa.Column("user_id", sa.Integer(), sa.ForeignKey("users.id"), nullable=False, index=True),
+        sa.Column("user_id", sa.String(length=36), sa.ForeignKey("profiles.id"), nullable=False, index=True),
         sa.Column("lesson_id", sa.Integer(), sa.ForeignKey("lessons.id"), nullable=False, index=True),
         sa.Column("status", lesson_progress_status, nullable=False, server_default="NOT_STARTED"),
         sa.Column("started_at", sa.DateTime(timezone=True), nullable=True),
@@ -124,7 +124,7 @@ def upgrade() -> None:
     op.create_table(
         "quiz_attempts",
         sa.Column("id", sa.Integer(), primary_key=True, autoincrement=True),
-        sa.Column("user_id", sa.Integer(), sa.ForeignKey("users.id"), nullable=False, index=True),
+        sa.Column("user_id", sa.String(length=36), sa.ForeignKey("profiles.id"), nullable=False, index=True),
         sa.Column("quiz_id", sa.Integer(), sa.ForeignKey("quizzes.id"), nullable=False, index=True),
         sa.Column("score", sa.Float(), nullable=False, server_default="0"),
         sa.Column("passed", sa.Boolean(), nullable=False, server_default="0"),
@@ -136,7 +136,7 @@ def upgrade() -> None:
     op.create_table(
         "user_concept_progress",
         sa.Column("id", sa.Integer(), primary_key=True, autoincrement=True),
-        sa.Column("user_id", sa.Integer(), sa.ForeignKey("users.id"), nullable=False, index=True),
+        sa.Column("user_id", sa.String(length=36), sa.ForeignKey("profiles.id"), nullable=False, index=True),
         sa.Column("concept_id", sa.Integer(), sa.ForeignKey("concepts.id"), nullable=False, index=True),
         sa.Column("solved_count", sa.Integer(), nullable=False, server_default="0"),
         sa.Column("failed_count", sa.Integer(), nullable=False, server_default="0"),

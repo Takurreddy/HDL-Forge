@@ -110,7 +110,7 @@ class ExecutionRunner:
         self,
         workspace: ExecutionWorkspace,
         job: ExecutionJob,
-        simulator: VerilatorSimulator,
+        simulator: HDLSimulator,
     ) -> SimulationResult:
         assert self.sandbox is not None
         return self.sandbox.execute(
