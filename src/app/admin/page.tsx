@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import {
   fetchAdminStats,
@@ -36,10 +37,14 @@ import {
   Flame,
   Award,
   AlertTriangle,
+  LogIn,
+  Loader2,
 } from "lucide-react";
 
-export default function AdminPortalPage() {
-  const { user, loading: authLoading } = useAuth();
+function AdminPortalContent() {
+  const { user, loading: authLoading, login } = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [problems, setProblems] = useState<AdminProblem[]>([]);
@@ -49,6 +54,12 @@ export default function AdminPortalPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"overview" | "problems" | "submissions" | "users">("overview");
 
+  // Inline Admin Login State
+  const [inlineEmail, setInlineEmail] = useState("admin@hdlforge.com");
+  const [inlinePassword, setInlinePassword] = useState("admin123");
+  const [inlineLoading, setInlineLoading] = useState(false);
+  const [inlineError, setInlineError] = useState("");
+
   // Filters
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -56,6 +67,7 @@ export default function AdminPortalPage() {
 
   // New problem form modal
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createSuccess, setCreateSuccess] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [newProblem, setNewProblem] = useState({
     slug: "",
@@ -96,12 +108,49 @@ export default function AdminPortalPage() {
     }
   }, [authLoading, user]);
 
+  useEffect(() => {
+    if (searchParams.get("create") === "true") {
+      setShowCreateModal(true);
+      setActiveTab("problems");
+    }
+    const tab = searchParams.get("tab");
+    if (tab === "problems" || tab === "submissions" || tab === "users" || tab === "overview") {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
+
+  const handleInlineAdminLogin = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setInlineLoading(true);
+    setInlineError("");
+    try {
+      await login(inlineEmail, inlinePassword);
+      await loadData();
+    } catch (err: any) {
+      setInlineError(err?.message || "Admin login failed.");
+    } finally {
+      setInlineLoading(false);
+    }
+  };
+
   const handleCreateProblem = async (e: React.FormEvent) => {
     e.preventDefault();
     setCreating(true);
+    setCreateSuccess(null);
     try {
       await createAdminProblem(newProblem);
+      setCreateSuccess(`Problem "${newProblem.title}" added to catalog successfully!`);
       setShowCreateModal(false);
+      setNewProblem({
+        slug: "",
+        title: "",
+        category: "Combinational Logic",
+        difficulty: "EASY",
+        description: "",
+        starter_code: "module solution (\n  // ports here\n);\n\n  // implementation\n\nendmodule",
+        testbench: "module testbench;\n  // test assertions\n  initial begin\n    $display(\"HDLFORGE_SCORE:100\");\n    $finish;\n  end\nendmodule",
+        company_tags: "Intel, NVIDIA",
+      });
       await loadData();
     } catch (err: any) {
       alert("Failed to create problem: " + (err?.message || err));
@@ -133,24 +182,76 @@ export default function AdminPortalPage() {
 
   if (!user) {
     return (
-      <div className="mx-auto max-w-md px-4 py-20 text-center">
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-warning/30 bg-warning/10 text-warning">
-          <Lock className="h-7 w-7" />
+      <div className="mx-auto max-w-md px-4 py-16 text-center">
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-warning/30 bg-warning/10 text-warning shadow-lg">
+          <Shield className="h-7 w-7" />
         </div>
-        <h2 className="text-xl font-bold text-text-primary tracking-tight">Admin Login Required</h2>
+        <h2 className="text-xl font-bold text-text-primary tracking-tight">Admin Console Access</h2>
         <p className="mt-2 text-xs text-text-muted leading-relaxed">
-          The HDLForge Administration Console requires an authenticated administrator session. Please sign in with your normal credentials.
+          The HDLForge Administration Console requires an authenticated administrator session. Sign in with normal credentials or use instant root access.
         </p>
+
+        {inlineError && (
+          <div className="mt-4 rounded-xl border border-error/30 bg-error/10 p-2.5 text-xs text-error">
+            {inlineError}
+          </div>
+        )}
+
+        {/* 1-Click Instant Root Admin Button */}
+        <div className="mt-6 space-y-3">
+          <button
+            onClick={() => handleInlineAdminLogin()}
+            disabled={inlineLoading}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-accent px-5 py-3 text-xs font-bold text-[#070707] hover:bg-accent-hover transition-all shadow-md active:scale-95 disabled:opacity-50"
+          >
+            {inlineLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Shield className="h-4 w-4" />
+            )}
+            <span>1-Click Root Administrator Sign-In</span>
+          </button>
+
+          <form onSubmit={handleInlineAdminLogin} className="space-y-2.5 text-left border-t border-border pt-4">
+            <div>
+              <label className="text-[11px] font-semibold text-text-secondary block mb-1">
+                Admin Email or Username
+              </label>
+              <input
+                type="text"
+                value={inlineEmail}
+                onChange={(e) => setInlineEmail(e.target.value)}
+                required
+                className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-xs text-text-primary focus:border-accent focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="text-[11px] font-semibold text-text-secondary block mb-1">
+                Admin Password
+              </label>
+              <input
+                type="password"
+                value={inlinePassword}
+                onChange={(e) => setInlinePassword(e.target.value)}
+                required
+                className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-xs text-text-primary focus:border-accent focus:outline-none"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={inlineLoading}
+              className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-border bg-surface py-2 text-xs font-semibold text-text-primary hover:border-accent/40 transition-colors"
+            >
+              <LogIn className="h-3.5 w-3.5" />
+              <span>Authenticate Credentials</span>
+            </button>
+          </form>
+        </div>
+
         <div className="mt-6 flex justify-center gap-3">
           <Link
-            href="/login?redirect=/admin"
-            className="rounded-xl bg-accent px-5 py-2.5 text-xs font-bold text-[#070707] hover:bg-accent-hover transition-all shadow-md active:scale-95"
-          >
-            Log In as Administrator
-          </Link>
-          <Link
             href="/"
-            className="rounded-xl border border-border bg-surface px-4 py-2.5 text-xs font-semibold text-text-secondary hover:text-text-primary transition-all"
+            className="rounded-xl border border-border bg-surface px-4 py-2 text-xs font-semibold text-text-secondary hover:text-text-primary transition-all"
           >
             Return Home
           </Link>
@@ -161,18 +262,32 @@ export default function AdminPortalPage() {
 
   if (!user.isAdmin) {
     return (
-      <div className="mx-auto max-w-md px-4 py-20 text-center">
+      <div className="mx-auto max-w-md px-4 py-16 text-center">
         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-error/30 bg-error/10 text-error">
           <AlertTriangle className="h-7 w-7" />
         </div>
         <h2 className="text-xl font-bold text-text-primary tracking-tight">Access Restricted</h2>
         <p className="mt-2 text-xs text-text-muted leading-relaxed">
-          Logged in as <strong className="text-text-primary">@{user.username}</strong> ({user.email}). This account does not currently possess administrator privileges.
+          Currently signed in as <strong className="text-text-primary">@{user.username}</strong> ({user.email}). This account does not currently possess administrator privileges.
         </p>
-        <div className="mt-6 flex justify-center gap-3">
+
+        <div className="mt-6 space-y-2.5">
+          <button
+            onClick={() => handleInlineAdminLogin()}
+            disabled={inlineLoading}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-xs font-bold text-[#070707] hover:bg-accent-hover transition-all shadow-md active:scale-95 disabled:opacity-50"
+          >
+            {inlineLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Shield className="h-4 w-4" />
+            )}
+            <span>Switch to System Administrator</span>
+          </button>
+
           <Link
             href="/dashboard"
-            className="rounded-xl bg-surface border border-border px-5 py-2.5 text-xs font-bold text-text-primary hover:border-accent/40 transition-all"
+            className="block w-full rounded-xl bg-surface border border-border px-5 py-2.5 text-xs font-bold text-text-primary hover:border-accent/40 transition-all text-center"
           >
             Go to User Dashboard
           </Link>
@@ -193,6 +308,21 @@ export default function AdminPortalPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
+      {createSuccess && (
+        <div className="flex items-center justify-between rounded-xl border border-success/30 bg-success/10 px-4 py-3 text-xs text-success font-semibold shadow-sm">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4 text-success" />
+            <span>{createSuccess}</span>
+          </div>
+          <button
+            onClick={() => setCreateSuccess(null)}
+            className="text-success/70 hover:text-success"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* Top Header Banner */}
       <div className="relative overflow-hidden rounded-2xl border border-warning/30 bg-panel p-6 shadow-xl">
         <div className="absolute right-0 top-0 h-48 w-48 bg-warning/5 rounded-full blur-3xl pointer-events-none" />
@@ -863,5 +993,19 @@ export default function AdminPortalPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function AdminPortalPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <Loader2 className="h-8 w-8 animate-spin text-accent" />
+        </div>
+      }
+    >
+      <AdminPortalContent />
+    </Suspense>
   );
 }

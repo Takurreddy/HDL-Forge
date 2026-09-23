@@ -15,10 +15,24 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const RAW_API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_BASE = RAW_API_BASE.replace(/\/+$/, "");
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
+
+  const syncToken = (token?: string | null) => {
+    if (typeof window === "undefined") return;
+    if (token) {
+      localStorage.setItem("hdlforge_token", token);
+      document.cookie = `access_token=${token}; path=/; max-age=259200; SameSite=Lax`;
+    } else {
+      localStorage.removeItem("hdlforge_token");
+      document.cookie = "access_token=; path=/; max-age=0; SameSite=Lax";
+    }
+  };
 
   const loadUserProfile = useCallback(async (authUser: { id: string; email?: string; created_at: string; last_sign_in_at?: string; user_metadata?: Record<string, unknown> } | null) => {
     if (!authUser) {
@@ -47,6 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         emailLower === "admin@hdlforge.com" ||
         emailLower === "bvsrujan@gmail.com" ||
         username.toLowerCase() === "admin" ||
+        username.toLowerCase() === "bvs" ||
         username.toLowerCase() === "bvsrujan"
       );
 
@@ -74,6 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         emailLower === "admin@hdlforge.com" ||
         emailLower === "bvsrujan@gmail.com" ||
         uname.toLowerCase() === "admin" ||
+        uname.toLowerCase() === "bvs" ||
         uname.toLowerCase() === "bvsrujan"
       );
       setUser({
@@ -95,7 +111,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshUser = useCallback(async () => {
     try {
       const { data: { user: authUser } } = await supabase.auth.getUser();
-      await loadUserProfile(authUser);
+      if (authUser) {
+        await loadUserProfile(authUser);
+        return;
+      }
+      // Check local backend token
+      const localToken = typeof window !== "undefined" ? localStorage.getItem("hdlforge_token") : null;
+      if (localToken) {
+        const res = await fetch(`${API_BASE}/api/auth/me`, {
+          headers: { Authorization: `Bearer ${localToken}` },
+        });
+        if (res.ok) {
+          const u = await res.json();
+          setUser({
+            id: u.id,
+            email: `${u.username}@hdlforge.local`,
+            username: u.username,
+            displayName: u.display_name,
+            avatarUrl: u.avatar_url,
+            createdAt: u.created_at,
+            lastLoginAt: u.last_login_at,
+            xp: 0,
+            level: 1,
+            solvedCount: 0,
+            isAdmin: Boolean(u.is_admin),
+          });
+          return;
+        }
+      }
+      setUser(null);
     } catch {
       setUser(null);
     }
@@ -106,9 +150,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     async function initAuth() {
       try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          syncToken(session.access_token);
+        }
         const { data: { user: authUser } } = await supabase.auth.getUser();
-        if (mounted) {
+        if (mounted && authUser) {
           await loadUserProfile(authUser);
+          return;
+        }
+
+        // Check local backend token if supabase user was absent
+        const localToken = typeof window !== "undefined" ? localStorage.getItem("hdlforge_token") : null;
+        if (localToken) {
+          const res = await fetch(`${API_BASE}/api/auth/me`, {
+            headers: { Authorization: `Bearer ${localToken}` },
+          });
+          if (res.ok && mounted) {
+            const u = await res.json();
+            setUser({
+              id: u.id,
+              email: `${u.username}@hdlforge.local`,
+              username: u.username,
+              displayName: u.display_name,
+              avatarUrl: u.avatar_url,
+              createdAt: u.created_at,
+              lastLoginAt: u.last_login_at,
+              xp: 0,
+              level: 1,
+              solvedCount: 0,
+              isAdmin: Boolean(u.is_admin),
+            });
+            return;
+          }
         }
       } catch (err) {
         console.warn("Auth initialization error:", err);
@@ -122,10 +196,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (!mounted) return;
+      if (session?.access_token) {
+        syncToken(session.access_token);
+      }
       if (session?.user) {
         await loadUserProfile(session.user);
       } else {
-        setUser(null);
+        const localToken = typeof window !== "undefined" ? localStorage.getItem("hdlforge_token") : null;
+        if (!localToken) {
+          setUser(null);
+        }
       }
       setLoading(false);
     });
@@ -137,43 +217,139 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [supabase, loadUserProfile]);
 
   const login = useCallback(async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const emailClean = email.trim();
 
-    if (error) {
-      throw new Error(error.message || "Invalid email or password");
+    // 1. Try Supabase Auth first
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: emailClean,
+        password,
+      });
+
+      if (!error && data.user) {
+        if (data.session?.access_token) {
+          syncToken(data.session.access_token);
+        }
+        await loadUserProfile(data.user);
+        return;
+      }
+    } catch {
+      // Fall through to backend auth
     }
 
-    if (data.user) {
-      await loadUserProfile(data.user);
+    // 2. Fall back to backend auth (/api/auth/login)
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email: emailClean, password }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        syncToken(data.token);
+        const u = data.user;
+        const isAdmin = Boolean(
+          u.is_admin ||
+          emailClean.toLowerCase() === "admin@hdlforge.com" ||
+          emailClean.toLowerCase() === "admin" ||
+          u.username.toLowerCase() === "admin" ||
+          u.username.toLowerCase() === "bvs" ||
+          u.username.toLowerCase() === "bvsrujan"
+        );
+        setUser({
+          id: u.id,
+          email: emailClean.includes("@") ? emailClean : `${u.username}@hdlforge.local`,
+          username: u.username,
+          displayName: u.display_name,
+          avatarUrl: u.avatar_url,
+          createdAt: u.created_at,
+          lastLoginAt: u.last_login_at,
+          xp: 0,
+          level: 1,
+          solvedCount: 0,
+          isAdmin,
+        });
+        return;
+      }
+      const errJson = await res.json().catch(() => ({}));
+      throw new Error(errJson.detail || "Invalid email or password");
+    } catch (backendErr: any) {
+      throw new Error(backendErr.message || "Invalid email or password");
     }
   }, [supabase, loadUserProfile]);
 
   const register = useCallback(async (email: string, username: string, password: string, displayName?: string) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          username,
-          display_name: displayName || username,
+    // 1. Try Supabase
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            username,
+            display_name: displayName || username,
+          },
         },
-      },
+      });
+
+      if (!error && data.user) {
+        if (data.session?.access_token) {
+          syncToken(data.session.access_token);
+        }
+        await loadUserProfile(data.user);
+        return;
+      }
+    } catch {
+      // Fall through to backend register
+    }
+
+    // 2. Fall back to backend register
+    const res = await fetch(`${API_BASE}/api/auth/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        email,
+        username,
+        password,
+        display_name: displayName || username,
+      }),
     });
 
-    if (error) {
-      throw new Error(error.message || "Registration failed");
+    if (res.ok) {
+      const data = await res.json();
+      syncToken(data.token);
+      const u = data.user;
+      setUser({
+        id: u.id,
+        email,
+        username: u.username,
+        displayName: u.display_name,
+        avatarUrl: u.avatar_url,
+        createdAt: u.created_at,
+        lastLoginAt: u.last_login_at,
+        xp: 0,
+        level: 1,
+        solvedCount: 0,
+        isAdmin: Boolean(u.is_admin),
+      });
+      return;
     }
 
-    if (data.user) {
-      await loadUserProfile(data.user);
-    }
+    const errJson = await res.json().catch(() => ({}));
+    throw new Error(errJson.detail || "Registration failed");
   }, [supabase, loadUserProfile]);
 
   const logout = useCallback(async () => {
-    await supabase.auth.signOut();
+    syncToken(null);
+    try {
+      await fetch(`${API_BASE}/api/auth/logout`, { method: "POST", credentials: "include" });
+    } catch {}
+    try {
+      await supabase.auth.signOut();
+    } catch {}
     setUser(null);
   }, [supabase]);
 

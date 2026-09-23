@@ -11,10 +11,22 @@ import {
 import { createClient } from "./supabase/client";
 
 async function getAuthHeader(): Promise<Record<string, string>> {
+  // 1. Check local token first (instant & reliable)
+  if (typeof window !== "undefined") {
+    const localToken = localStorage.getItem("hdlforge_token");
+    if (localToken) {
+      return { Authorization: `Bearer ${localToken}` };
+    }
+  }
+
+  // 2. Fall back to active Supabase session
   try {
     const supabase = createClient();
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.access_token) {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("hdlforge_token", session.access_token);
+      }
       return { Authorization: `Bearer ${session.access_token}` };
     }
   } catch {
@@ -53,6 +65,7 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const authHeader = await getAuthHeader();
   const url = `${API_BASE}${path}`;
   const res = await fetch(url, {
+    credentials: "include",
     ...options,
     headers: {
       "Content-Type": "application/json",
@@ -1518,8 +1531,6 @@ export async function fetchProblems(params?: {
   category?: string;
   search?: string;
 }): Promise<ProblemListResponse> {
-  const supabaseRes = await supabaseFetchProblems(params);
-  if (supabaseRes) return supabaseRes;
   const searchParams = new URLSearchParams();
   if (params?.difficulty && params.difficulty !== "all") {
     searchParams.set("difficulty", params.difficulty.toUpperCase());
@@ -1534,14 +1545,23 @@ export async function fetchProblems(params?: {
   const qs = searchParams.toString();
   const path = `/api/problems${qs ? `?${qs}` : ""}`;
 
+  // 1. Prioritize backend database API (single source of truth with 50 problems + custom added)
   try {
     const data = await apiFetch<ApiProblemListResponse>(path);
-    return {
-      problems: data.problems.map(transformProblem),
-      total: data.total,
-    };
+    if (data && Array.isArray(data.problems) && data.problems.length > 0) {
+      return {
+        problems: data.problems.map(transformProblem),
+        total: data.total,
+      };
+    }
   } catch {
-    let filtered = [...MOCK_PROBLEMS];
+    // Backend API unavailable, try Supabase then Mocks
+  }
+
+  const supabaseRes = await supabaseFetchProblems(params);
+  if (supabaseRes && supabaseRes.problems.length > 0) return supabaseRes;
+
+  let filtered = [...MOCK_PROBLEMS];
     if (params?.difficulty && params.difficulty !== "all") {
       filtered = filtered.filter(
         (p) => p.difficulty.toLowerCase() === params.difficulty?.toLowerCase()
@@ -1567,7 +1587,6 @@ export async function fetchProblems(params?: {
       problems: filtered,
       total: filtered.length,
     };
-  }
 }
 
 export async function fetchProblemBySlug(slug: string): Promise<Problem> {
@@ -2734,10 +2753,15 @@ export async function createAdminProblem(problem: {
   testbench?: string;
   company_tags?: string;
 }): Promise<any> {
+  const payload = {
+    ...problem,
+    difficulty: (problem.difficulty || "EASY").toUpperCase(),
+    language: (problem.language || "SYSTEMVERILOG").toUpperCase(),
+  };
   return apiFetch("/api/admin/problems", {
     method: "POST",
     credentials: "include",
-    body: JSON.stringify(problem),
+    body: JSON.stringify(payload),
   });
 }
 

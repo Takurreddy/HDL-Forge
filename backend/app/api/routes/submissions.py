@@ -2,6 +2,7 @@ from fastapi import APIRouter, Cookie, Depends, Header, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.db.database import get_db
 from app.db.models import Discussion, DiscussionVote, Problem, Submission, SubmissionTestResult, Profile
 from app.schemas.submission import SubmissionRequest, SubmissionResponse, TestResult
@@ -48,7 +49,6 @@ def require_authenticated_user(
     if not token:
         raise HTTPException(status_code=401, detail="Authentication required.")
 
-    # verify_supabase_jwt raises 401 on any failure; get_user_from_token wraps it
     user = auth_service.get_user_from_token(db, token)
     if not user:
         raise HTTPException(status_code=401, detail="Invalid or expired token.")

@@ -48,6 +48,39 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning("seed_learning error: %s", e)
 
+    # 6. Ensure default admin profiles exist
+    try:
+        from app.db.database import SessionLocal
+        from app.db.models import Profile
+        from app.services.auth_service import DEFAULT_ADMIN_ID
+        with SessionLocal() as db:
+            adm = db.query(Profile).filter(Profile.username == "admin").first()
+            if not adm:
+                adm = Profile(
+                    id=DEFAULT_ADMIN_ID,
+                    username="admin",
+                    display_name="System Administrator",
+                    is_admin=True,
+                )
+                db.add(adm)
+            else:
+                adm.is_admin = True
+
+            bvs = db.query(Profile).filter(Profile.username == "bvs").first()
+            if not bvs:
+                bvs = Profile(
+                    id="00000000-0000-0000-0000-000000000003",
+                    username="bvs",
+                    display_name="BVS Rujan",
+                    is_admin=True,
+                )
+                db.add(bvs)
+            else:
+                bvs.is_admin = True
+            db.commit()
+    except Exception as e:
+        logger.warning("Admin profile seed error: %s", e)
+
     yield
 
 

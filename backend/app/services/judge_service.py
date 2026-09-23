@@ -367,16 +367,19 @@ class JudgeService:
                 user_id=user_id,
                 problem_id=problem.id,
                 status=ProgressStatus.NOT_STARTED,
+                attempts=0,
+                best_score=0.0,
             )
             db.add(progress)
 
-        progress.attempts += 1
+        progress.attempts = (progress.attempts or 0) + 1
         progress.last_attempt_at = datetime.now(timezone.utc)
 
-        if score > progress.best_score:
+        current_best = progress.best_score if progress.best_score is not None else 0.0
+        if score > current_best:
             progress.best_score = float(score)
 
-        user.total_submissions += 1
+        user.total_submissions = (user.total_submissions or 0) + 1
 
         xp_earned = 0
         progress_status = None
@@ -384,9 +387,9 @@ class JudgeService:
         if final_status == "PASSED":
             if progress.status != ProgressStatus.SOLVED:
                 xp_earned = award_solve_xp(user, problem)
-                user.xp += xp_earned
+                user.xp = (user.xp or 0) + xp_earned
                 user.level = calculate_level(user.xp)
-                user.solved_count += 1
+                user.solved_count = (user.solved_count or 0) + 1
             progress.status = ProgressStatus.SOLVED
             if not progress.solved_at:
                 progress.solved_at = datetime.now(timezone.utc)

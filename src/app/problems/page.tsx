@@ -34,6 +34,7 @@ import {
   Award,
   Filter,
   Check,
+  Plus,
 } from "lucide-react";
 
 const CATEGORIES = [
@@ -361,6 +362,18 @@ export default function ProblemsPage() {
                 <option value="attempted">Attempted</option>
               </select>
             </div>
+
+            {/* Admin Add Problem Button */}
+            {user?.isAdmin && (
+              <Link
+                href="/admin?tab=problems&create=true"
+                className="flex items-center justify-center gap-1.5 rounded-xl border border-warning/50 bg-warning/15 px-3.5 py-2 text-xs font-bold text-warning transition-all hover:bg-warning/25 active:scale-95 shrink-0 shadow-sm"
+                title="Create a new problem in the catalog"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span>Add Problem</span>
+              </Link>
+            )}
 
             {/* Iconic LeetCode "Pick One" Random Button */}
             <button
