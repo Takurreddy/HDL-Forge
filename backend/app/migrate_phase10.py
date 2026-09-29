@@ -13,7 +13,7 @@ def run_migration():
     try:
         # 1. Add user_id to submissions (nullable for existing data)
         try:
-            db.execute(text("ALTER TABLE submissions ADD COLUMN user_id INTEGER REFERENCES users(id)"))
+            db.execute(text("ALTER TABLE submissions ADD COLUMN user_id VARCHAR(36) REFERENCES profiles(id)"))
             db.commit()
             logger.info("Added user_id to submissions")
         except Exception:
@@ -52,7 +52,7 @@ def run_migration():
                 CREATE TABLE IF NOT EXISTS discussions (
                     id SERIAL PRIMARY KEY,
                     problem_id INTEGER NOT NULL REFERENCES problems(id),
-                    user_id INTEGER NOT NULL REFERENCES users(id),
+                    user_id VARCHAR(36) NOT NULL REFERENCES profiles(id),
                     parent_id INTEGER REFERENCES discussions(id),
                     content TEXT NOT NULL,
                     upvotes INTEGER DEFAULT 0,
@@ -73,7 +73,7 @@ def run_migration():
                 CREATE TABLE IF NOT EXISTS discussion_votes (
                     id SERIAL PRIMARY KEY,
                     discussion_id INTEGER NOT NULL REFERENCES discussions(id),
-                    user_id INTEGER NOT NULL REFERENCES users(id),
+                    user_id VARCHAR(36) NOT NULL REFERENCES profiles(id),
                     vote INTEGER NOT NULL DEFAULT 1,
                     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
                     UNIQUE(discussion_id, user_id)

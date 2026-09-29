@@ -7,6 +7,7 @@ interface DifficultyBadgeProps {
 
 const DIFFICULTY_STYLES: Record<Difficulty, { text: string; bg: string; border: string }> = {
   easy: {
+<<<<<<< HEAD
     text: "text-emerald-700 dark:text-[#00B8A3]",
     bg: "bg-emerald-500/10 dark:bg-[#00B8A3]/10",
     border: "border-emerald-500/20 dark:border-[#00B8A3]/20",
@@ -20,6 +21,21 @@ const DIFFICULTY_STYLES: Record<Difficulty, { text: string; bg: string; border: 
     text: "text-rose-700 dark:text-[#FF375F]",
     bg: "bg-rose-500/10 dark:bg-[#FF375F]/10",
     border: "border-rose-500/20 dark:border-[#FF375F]/20",
+=======
+    text: "text-[#00B8A3]",
+    bg: "bg-[#00B8A3]/10",
+    border: "border-[#00B8A3]/20",
+  },
+  medium: {
+    text: "text-[#FFC01E]",
+    bg: "bg-[#FFC01E]/10",
+    border: "border-[#FFC01E]/20",
+  },
+  hard: {
+    text: "text-[#FF375F]",
+    bg: "bg-[#FF375F]/10",
+    border: "border-[#FF375F]/20",
+>>>>>>> friend/Bvs_SubBranch
   },
 };
 

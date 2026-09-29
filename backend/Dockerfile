@@ -26,5 +26,9 @@ EXPOSE 8000
 # Environment variables
 ENV PYTHONUNBUFFERED=1
 
+<<<<<<< HEAD
 # Start FastAPI server dynamically binding to Render's $PORT or 8000
+=======
+# Start the FastAPI server
+>>>>>>> friend/Bvs_SubBranch
 CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

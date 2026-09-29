@@ -133,7 +133,13 @@ class SubmissionTestResult(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     submission_id: Mapped[int] = mapped_column(ForeignKey("submissions.id"), index=True)
+<<<<<<< HEAD
     test_case_id: Mapped[int | None] = mapped_column(ForeignKey("test_cases.id"), nullable=True)
+=======
+    test_case_id: Mapped[int | None] = mapped_column(
+        ForeignKey("test_cases.id"), nullable=True
+    )
+>>>>>>> friend/Bvs_SubBranch
     test_name: Mapped[str] = mapped_column(String(200))
     status: Mapped[str] = mapped_column(String(50))
     score: Mapped[float] = mapped_column(Float, default=0.0)

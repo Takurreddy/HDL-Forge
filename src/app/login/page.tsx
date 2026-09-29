@@ -1,10 +1,18 @@
 "use client";
 
+<<<<<<< HEAD
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import { LogIn, Code2, Loader2, CheckCircle2, ShieldCheck, Cpu, ArrowRight, Shield } from "lucide-react";
+=======
+import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { useAuth } from "@/lib/auth";
+import { LogIn, Code2, Loader2, CheckCircle2, ShieldCheck, Cpu, ArrowRight } from "lucide-react";
+>>>>>>> friend/Bvs_SubBranch
 
 function LoginForm() {
   const [email, setEmail] = useState("");
@@ -14,6 +22,10 @@ function LoginForm() {
   const { login } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
+<<<<<<< HEAD
+=======
+  const redirect = searchParams.get("redirect") || "/dashboard";
+>>>>>>> friend/Bvs_SubBranch
 
   async function handleSubmit(e?: React.FormEvent) {
     if (e) e.preventDefault();
@@ -21,7 +33,10 @@ function LoginForm() {
     setLoading(true);
     try {
       await login(email, password);
+<<<<<<< HEAD
       const redirect = searchParams.get("redirect") || "/dashboard";
+=======
+>>>>>>> friend/Bvs_SubBranch
       router.push(redirect);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed. Please check credentials.");
@@ -36,6 +51,7 @@ function LoginForm() {
     setPassword("password123");
   };
 
+<<<<<<< HEAD
   const handleQuickAdmin = async () => {
     setEmail("admin@hdlforge.com");
     setPassword("admin123");
@@ -52,6 +68,8 @@ function LoginForm() {
     }
   };
 
+=======
+>>>>>>> friend/Bvs_SubBranch
   return (
     <div className="flex min-h-[calc(100vh-3rem)] items-center justify-center px-4 py-12 relative bg-background overflow-hidden">
       {/* Glow aura */}
@@ -107,7 +125,11 @@ function LoginForm() {
             <button
               type="submit"
               disabled={loading}
+<<<<<<< HEAD
               className="flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-accent text-xs font-bold text-accent-fg transition-all hover:bg-accent-hover shadow-sm disabled:opacity-50 mt-2"
+=======
+              className="flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-accent text-xs font-bold text-[#070707] transition-all hover:bg-accent-hover hover:shadow-[0_0_20px_rgba(0,217,165,0.25)] disabled:opacity-50 mt-2"
+>>>>>>> friend/Bvs_SubBranch
             >
               {loading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -118,6 +140,7 @@ function LoginForm() {
             </button>
           </form>
 
+<<<<<<< HEAD
           {/* Quick Credential Buttons */}
           <div className="mt-4 pt-4 border-t border-border space-y-2">
             <button
@@ -139,6 +162,17 @@ function LoginForm() {
                 Demo user: <span className="font-mono text-text-muted">demo@hdlforge.dev</span> (click to fill)
               </button>
             </div>
+=======
+          {/* Quick Demo Fill Button */}
+          <div className="mt-4 pt-4 border-t border-border text-center">
+            <button
+              onClick={handleQuickDemo}
+              type="button"
+              className="text-[11px] font-medium text-text-dim hover:text-accent transition-colors"
+            >
+              Demo credentials: <span className="font-mono text-text-muted">demo@hdlforge.dev</span> (click to fill)
+            </button>
+>>>>>>> friend/Bvs_SubBranch
           </div>
 
           <p className="mt-6 text-center text-xs text-text-muted">

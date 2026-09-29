@@ -63,18 +63,27 @@ export default function Console({
 
     if (result.status === "PASSED") {
       return (
+<<<<<<< HEAD
         <span className="flex items-center gap-1.5 rounded-full bg-emerald-500/10 dark:bg-[#00B8A3]/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 dark:text-[#00B8A3] border border-emerald-500/20 dark:border-[#00B8A3]/20">
+=======
+        <span className="flex items-center gap-1.5 rounded-full bg-[#00B8A3]/10 px-2.5 py-0.5 text-xs font-semibold text-[#00B8A3] border border-[#00B8A3]/20">
+>>>>>>> friend/Bvs_SubBranch
           <CheckCircle2 className="h-3.5 w-3.5" />
           Accepted
         </span>
       );
     } else if (result.status === "COMPILATION_ERROR") {
       return (
+<<<<<<< HEAD
         <span className="flex items-center gap-1.5 rounded-full bg-rose-500/10 dark:bg-[#FF375F]/10 px-2.5 py-0.5 text-xs font-semibold text-rose-700 dark:text-[#FF375F] border border-rose-500/20 dark:border-[#FF375F]/20">
+=======
+        <span className="flex items-center gap-1.5 rounded-full bg-[#FF375F]/10 px-2.5 py-0.5 text-xs font-semibold text-[#FF375F] border border-[#FF375F]/20">
+>>>>>>> friend/Bvs_SubBranch
           <XCircle className="h-3.5 w-3.5" />
           Compile Error
         </span>
       );
+<<<<<<< HEAD
     } else if (result.status === "error") {
       return (
         <span className="flex items-center gap-1.5 rounded-full bg-rose-500/10 dark:bg-[#FF375F]/10 px-2.5 py-0.5 text-xs font-semibold text-rose-700 dark:text-[#FF375F] border border-rose-500/20 dark:border-[#FF375F]/20">
@@ -85,6 +94,11 @@ export default function Console({
     } else {
       return (
         <span className="flex items-center gap-1.5 rounded-full bg-rose-500/10 dark:bg-[#FF375F]/10 px-2.5 py-0.5 text-xs font-semibold text-rose-700 dark:text-[#FF375F] border border-rose-500/20 dark:border-[#FF375F]/20">
+=======
+    } else {
+      return (
+        <span className="flex items-center gap-1.5 rounded-full bg-[#FF375F]/10 px-2.5 py-0.5 text-xs font-semibold text-[#FF375F] border border-[#FF375F]/20">
+>>>>>>> friend/Bvs_SubBranch
           <XCircle className="h-3.5 w-3.5" />
           Wrong Answer ({result.testsPassed}/{result.testsTotal})
         </span>
@@ -229,17 +243,24 @@ export default function Console({
                     <div>
                       <h3
                         className={`text-lg font-black tracking-tight ${
+<<<<<<< HEAD
                           result.status === "PASSED"
                             ? "text-emerald-700 dark:text-[#00B8A3]"
                             : "text-rose-700 dark:text-[#FF375F]"
+=======
+                          result.status === "PASSED" ? "text-[#00B8A3]" : "text-[#FF375F]"
+>>>>>>> friend/Bvs_SubBranch
                         }`}
                       >
                         {result.status === "PASSED"
                           ? "Accepted"
                           : result.status === "COMPILATION_ERROR"
                           ? "Compile Error"
+<<<<<<< HEAD
                           : result.status === "error"
                           ? "Submission Error"
+=======
+>>>>>>> friend/Bvs_SubBranch
                           : "Wrong Answer"}
                       </h3>
                       <div className="flex items-center gap-3 text-xs text-text-muted mt-1 font-mono">
@@ -250,7 +271,11 @@ export default function Console({
                           </strong>
                         </span>
                         <span>·</span>
+<<<<<<< HEAD
                         <span className="text-emerald-700 dark:text-[#00B8A3] font-semibold">Beats 98.2%</span>
+=======
+                        <span className="text-[#00B8A3] font-semibold">Beats 98.2%</span>
+>>>>>>> friend/Bvs_SubBranch
                         <span>·</span>
                         <span>
                           Score: <strong className="text-text-primary">{result.score}%</strong>

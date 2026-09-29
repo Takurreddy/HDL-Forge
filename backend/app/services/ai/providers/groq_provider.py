@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 ﻿import logging
+=======
+∩╗┐import logging
+>>>>>>> friend/Bvs_SubBranch
 import httpx
 from app.core.config import settings
 from app.services.ai.providers.base import AIProvider, AIMessage, AIResponse

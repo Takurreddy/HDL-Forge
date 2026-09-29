@@ -804,6 +804,7 @@ endmodule`,
 
 endmodule`,
   },
+<<<<<<< HEAD
   {
     id: "22",
     slug: "decoder-3to8",
@@ -1524,6 +1525,8 @@ endmodule`,
 
 endmodule`,
   },
+=======
+>>>>>>> friend/Bvs_SubBranch
 ];
 
 export async function fetchProblems(params?: {
@@ -1545,6 +1548,7 @@ export async function fetchProblems(params?: {
   const qs = searchParams.toString();
   const path = `/api/problems${qs ? `?${qs}` : ""}`;
 
+<<<<<<< HEAD
   // 1. Prioritize backend database API (single source of truth with 50 problems + custom added)
   try {
     const data = await apiFetch<ApiProblemListResponse>(path);
@@ -1562,6 +1566,16 @@ export async function fetchProblems(params?: {
   if (supabaseRes && supabaseRes.problems.length > 0) return supabaseRes;
 
   let filtered = [...MOCK_PROBLEMS];
+=======
+  try {
+    const data = await apiFetch<ApiProblemListResponse>(path);
+    return {
+      problems: data.problems.map(transformProblem),
+      total: data.total,
+    };
+  } catch {
+    let filtered = [...MOCK_PROBLEMS];
+>>>>>>> friend/Bvs_SubBranch
     if (params?.difficulty && params.difficulty !== "all") {
       filtered = filtered.filter(
         (p) => p.difficulty.toLowerCase() === params.difficulty?.toLowerCase()
@@ -1587,6 +1601,10 @@ export async function fetchProblems(params?: {
       problems: filtered,
       total: filtered.length,
     };
+<<<<<<< HEAD
+=======
+  }
+>>>>>>> friend/Bvs_SubBranch
 }
 
 export async function fetchProblemBySlug(slug: string): Promise<Problem> {
@@ -2564,6 +2582,7 @@ export async function fetchContests(): Promise<Contest[]> {
   }
 }
 
+<<<<<<< HEAD
 export async function fetchContestById(id: string): Promise<Contest | null> {
   try {
     const data = await apiFetch<Contest>(`/api/contests/${id}`);
@@ -2809,3 +2828,5 @@ export async function toggleUserAdmin(userId: string): Promise<any> {
 
 
 
+=======
+>>>>>>> friend/Bvs_SubBranch

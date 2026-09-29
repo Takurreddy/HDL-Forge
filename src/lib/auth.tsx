@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, ReactNode } from "react";
 import { User } from "./types";
 import { createClient } from "./supabase/client";
+import { isSupabaseConfigured } from "./supabase/queries";
 
 interface AuthContextType {
   user: User | null;
@@ -18,6 +19,56 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const RAW_API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const API_BASE = RAW_API_BASE.replace(/\/+$/, "");
 
+<<<<<<< HEAD
+=======
+interface BackendUser {
+  id: string;
+  username: string;
+  display_name?: string | null;
+  avatar_url?: string | null;
+  created_at?: string;
+  last_login_at?: string | null;
+}
+
+interface BackendAuthResponse {
+  user: BackendUser;
+  token: string;
+}
+
+function mapBackendUser(u: BackendUser): User {
+  return {
+    id: u.id,
+    email: "",
+    username: u.username,
+    displayName: u.display_name ?? null,
+    avatarUrl: u.avatar_url ?? null,
+    createdAt: u.created_at || new Date().toISOString(),
+    lastLoginAt: u.last_login_at ?? null,
+    xp: 0,
+    level: 1,
+    solvedCount: 0,
+  };
+}
+
+async function backendFetch<T>(path: string, options?: RequestInit): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    const detail = (body as { detail?: unknown }).detail;
+    const message =
+      typeof detail === "string" ? detail : `Request failed with status ${res.status}`;
+    throw new Error(message);
+  }
+
+  return res.json() as Promise<T>;
+}
+
+>>>>>>> friend/Bvs_SubBranch
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -109,6 +160,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [supabase]);
 
   const refreshUser = useCallback(async () => {
+    if (!isSupabaseConfigured()) {
+      try {
+        const backendUser = await backendFetch<BackendUser>("/api/auth/me");
+        setUser(mapBackendUser(backendUser));
+      } catch {
+        setUser(null);
+      }
+      return;
+    }
+
     try {
       const { data: { user: authUser } } = await supabase.auth.getUser();
       if (authUser) {
@@ -184,6 +245,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return false;
     }
 
+    if (!isSupabaseConfigured()) {
+      void (async () => {
+        try {
+          const backendUser = await backendFetch<BackendUser>("/api/auth/me");
+          if (mounted) {
+            setUser(mapBackendUser(backendUser));
+          }
+        } catch (err) {
+          console.warn("Auth initialization error:", err);
+          if (mounted) setUser(null);
+        } finally {
+          if (mounted) setLoading(false);
+        }
+      })();
+
+      return () => {
+        mounted = false;
+      };
+    }
+
     async function initAuth() {
       try {
         // 1. Check Supabase session first
@@ -239,7 +320,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [supabase, loadUserProfile]);
 
   const login = useCallback(async (email: string, password: string) => {
+<<<<<<< HEAD
     const emailClean = email.trim();
+=======
+    if (!isSupabaseConfigured()) {
+      const data = await backendFetch<BackendAuthResponse>("/api/auth/login", {
+        method: "POST",
+        body: JSON.stringify({ email, password }),
+      });
+      setUser(mapBackendUser(data.user));
+      return;
+    }
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+>>>>>>> friend/Bvs_SubBranch
 
     // 1. Try Supabase Auth first
     try {
@@ -303,6 +400,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [supabase, loadUserProfile]);
 
   const register = useCallback(async (email: string, username: string, password: string, displayName?: string) => {
+<<<<<<< HEAD
     // 1. Try Supabase
     try {
       const { data, error } = await supabase.auth.signUp({
@@ -313,6 +411,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             username,
             display_name: displayName || username,
           },
+=======
+    if (!isSupabaseConfigured()) {
+      const data = await backendFetch<BackendAuthResponse>("/api/auth/register", {
+        method: "POST",
+        body: JSON.stringify({
+          email,
+          username,
+          password,
+          display_name: displayName || username,
+        }),
+      });
+      setUser(mapBackendUser(data.user));
+      return;
+    }
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          username,
+          display_name: displayName || username,
+>>>>>>> friend/Bvs_SubBranch
         },
       });
 
@@ -360,6 +481,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+<<<<<<< HEAD
     const errJson = await res.json().catch(() => ({}));
     throw new Error(errJson.detail || "Registration failed");
   }, [supabase, loadUserProfile]);
@@ -372,6 +494,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await supabase.auth.signOut();
     } catch {}
+=======
+    // signUp does not always return a session (e.g. when email confirmation is
+    // enabled). Establish one right away so signup and login share one session.
+    if (!data.session) {
+      const { data: signIn, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      if (signInError) {
+        if (/confirm|verification/i.test(signInError.message)) {
+          throw new Error("Almost there — check your inbox to confirm your email, then sign in.");
+        }
+        throw new Error(signInError.message || "Registration failed");
+      }
+      if (signIn.user) {
+        await loadUserProfile(signIn.user);
+      }
+      return;
+    }
+
+    if (data.user) {
+      await loadUserProfile(data.user);
+    }
+  }, [supabase, loadUserProfile]);
+
+  const logout = useCallback(async () => {
+    if (!isSupabaseConfigured()) {
+      await backendFetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+      setUser(null);
+      return;
+    }
+
+    await supabase.auth.signOut();
+>>>>>>> friend/Bvs_SubBranch
     setUser(null);
   }, [supabase]);
 

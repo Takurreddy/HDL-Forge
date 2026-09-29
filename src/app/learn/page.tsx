@@ -412,7 +412,11 @@ export default function LearnPage() {
             onClick={() => setActiveTab("quest")}
             className={`flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs font-bold transition-all ${
               activeTab === "quest"
+<<<<<<< HEAD
                 ? "bg-accent text-accent-fg shadow-sm"
+=======
+                ? "bg-accent text-[#070707] shadow-[0_0_12px_rgba(0,217,165,0.25)]"
+>>>>>>> friend/Bvs_SubBranch
                 : "text-text-muted hover:text-text-primary hover:bg-surface"
             }`}
           >
@@ -424,7 +428,11 @@ export default function LearnPage() {
             onClick={() => setActiveTab("library")}
             className={`flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs font-bold transition-all ${
               activeTab === "library"
+<<<<<<< HEAD
                 ? "bg-accent text-accent-fg shadow-sm"
+=======
+                ? "bg-accent text-[#070707] shadow-[0_0_12px_rgba(0,217,165,0.25)]"
+>>>>>>> friend/Bvs_SubBranch
                 : "text-text-muted hover:text-text-primary hover:bg-surface"
             }`}
           >
@@ -436,7 +444,11 @@ export default function LearnPage() {
             onClick={() => setActiveTab("explore")}
             className={`flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs font-bold transition-all ${
               activeTab === "explore"
+<<<<<<< HEAD
                 ? "bg-accent text-accent-fg shadow-sm"
+=======
+                ? "bg-accent text-[#070707] shadow-[0_0_12px_rgba(0,217,165,0.25)]"
+>>>>>>> friend/Bvs_SubBranch
                 : "text-text-muted hover:text-text-primary hover:bg-surface"
             }`}
           >
@@ -448,16 +460,25 @@ export default function LearnPage() {
             onClick={() => setActiveTab("study-plan")}
             className={`flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs font-bold transition-all ${
               activeTab === "study-plan"
+<<<<<<< HEAD
                 ? "bg-accent text-accent-fg shadow-sm"
+=======
+                ? "bg-accent text-[#070707] shadow-[0_0_12px_rgba(0,217,165,0.25)]"
+>>>>>>> friend/Bvs_SubBranch
                 : "text-text-muted hover:text-text-primary hover:bg-surface"
             }`}
           >
             <GraduationCap className="h-3.5 w-3.5" />
+<<<<<<< HEAD
             <span>Study Plans</span>
+=======
+            <span>Study Plan</span>
+>>>>>>> friend/Bvs_SubBranch
           </button>
         </div>
       </div>
 
+<<<<<<< HEAD
       {/* ECE & EEE Silicon Engineering Visual Banner */}
       <div className="mb-8 relative overflow-hidden rounded-2xl border border-border bg-panel p-5">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
@@ -497,6 +518,8 @@ export default function LearnPage() {
         </div>
       </div>
 
+=======
+>>>>>>> friend/Bvs_SubBranch
       {/* 1. QUEST: Role-Based Hardware Tracks */}
       {activeTab === "quest" && (
         <div className="space-y-8 animate-in fade-in duration-200">

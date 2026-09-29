@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { AuthProvider } from "@/lib/auth";
+<<<<<<< HEAD
 import { ThemeProvider } from "@/lib/theme";
+=======
+import { ThemeProvider, themeInitScript } from "@/lib/theme";
+>>>>>>> friend/Bvs_SubBranch
 import Navbar from "@/components/Navbar";
 import "./globals.css";
 
@@ -31,6 +35,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+<<<<<<< HEAD
       className={`${inter.variable} ${jetbrainsMono.variable} dark h-full antialiased`}
       suppressHydrationWarning
     >
@@ -56,6 +61,13 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col bg-background text-text-primary transition-colors duration-200">
+=======
+      className={`${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      suppressHydrationWarning
+    >
+      <body className="min-h-full flex flex-col bg-background text-foreground">
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+>>>>>>> friend/Bvs_SubBranch
         <ThemeProvider>
           <AuthProvider>
             <Navbar />

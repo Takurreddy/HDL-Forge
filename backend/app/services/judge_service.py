@@ -273,7 +273,11 @@ class JudgeService:
                 tc_id = te.test_case.id if (te.test_case and te.test_case.id and te.test_case.id > 0) else None
                 str_result = SubmissionTestResult(
                     submission_id=submission.id,
+<<<<<<< HEAD
                     test_case_id=tc_id,
+=======
+                    test_case_id=te.test_case.id if te.test_case.id else None,
+>>>>>>> friend/Bvs_SubBranch
                     test_name=te.test_case.name,
                     status="PASSED" if te.result.passed else "FAILED",
                     score=te.score,
