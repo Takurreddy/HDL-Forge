@@ -289,7 +289,7 @@ export default function ProblemsPage() {
               <DifficultyBadge difficulty={daily.problem.difficulty} size="sm" />
               <Link
                 href={`/problems/${daily.problem.slug}`}
-                className="flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-xs font-bold text-[#070707] transition-all hover:bg-accent-hover hover:shadow-[0_0_16px_rgba(0,217,165,0.3)] active:scale-95"
+                className="flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-xs font-bold text-accent-fg transition-all hover:bg-accent-hover shadow-sm active:scale-95"
               >
                 <span>Solve Today</span>
                 <ArrowRight className="h-3.5 w-3.5" />
@@ -313,7 +313,7 @@ export default function ProblemsPage() {
                   onClick={() => setCategory(cat.id)}
                   className={`flex items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-1.5 text-xs font-medium transition-all ${
                     isSelected
-                      ? "bg-text-primary text-[#070707] font-semibold shadow-sm"
+                      ? "bg-text-primary text-background font-semibold shadow-sm"
                       : "bg-panel text-text-secondary border border-border hover:bg-surface hover:text-text-primary"
                   }`}
                 >
@@ -459,7 +459,7 @@ export default function ProblemsPage() {
                           {/* Status Icon */}
                           <td className="px-4 py-3.5 text-center">
                             {isSolved ? (
-                              <CheckCircle2 className="mx-auto h-4 w-4 text-[#00B8A3]" />
+                              <CheckCircle2 className="mx-auto h-4 w-4 text-emerald-700 dark:text-[#00B8A3]" />
                             ) : (
                               <Circle className="mx-auto h-3.5 w-3.5 text-text-dim/60 group-hover:text-text-dim" />
                             )}
@@ -575,14 +575,14 @@ export default function ProblemsPage() {
                 {/* Easy */}
                 <div>
                   <div className="flex justify-between text-[11px] mb-1">
-                    <span className="font-semibold text-[#00B8A3]">Easy</span>
+                    <span className="font-semibold text-emerald-700 dark:text-[#00B8A3]">Easy</span>
                     <span className="font-mono text-text-muted">
                       {solvedEasy}/{easyCount}
                     </span>
                   </div>
                   <div className="h-1.5 w-full rounded-full bg-surface overflow-hidden">
                     <div
-                      className="h-full bg-[#00B8A3] rounded-full"
+                      className="h-full bg-emerald-600 dark:bg-[#00B8A3] rounded-full"
                       style={{ width: `${(solvedEasy / Math.max(1, easyCount)) * 100}%` }}
                     />
                   </div>
@@ -591,14 +591,14 @@ export default function ProblemsPage() {
                 {/* Medium */}
                 <div>
                   <div className="flex justify-between text-[11px] mb-1">
-                    <span className="font-semibold text-[#FFC01E]">Medium</span>
+                    <span className="font-semibold text-amber-700 dark:text-[#FFC01E]">Medium</span>
                     <span className="font-mono text-text-muted">
                       {solvedMed}/{mediumCount}
                     </span>
                   </div>
                   <div className="h-1.5 w-full rounded-full bg-surface overflow-hidden">
                     <div
-                      className="h-full bg-[#FFC01E] rounded-full"
+                      className="h-full bg-amber-500 dark:bg-[#FFC01E] rounded-full"
                       style={{ width: `${(solvedMed / Math.max(1, mediumCount)) * 100}%` }}
                     />
                   </div>
@@ -607,14 +607,14 @@ export default function ProblemsPage() {
                 {/* Hard */}
                 <div>
                   <div className="flex justify-between text-[11px] mb-1">
-                    <span className="font-semibold text-[#FF375F]">Hard</span>
+                    <span className="font-semibold text-rose-700 dark:text-[#FF375F]">Hard</span>
                     <span className="font-mono text-text-muted">
                       {solvedHard}/{hardCount}
                     </span>
                   </div>
                   <div className="h-1.5 w-full rounded-full bg-surface overflow-hidden">
                     <div
-                      className="h-full bg-[#FF375F] rounded-full"
+                      className="h-full bg-rose-500 dark:bg-[#FF375F] rounded-full"
                       style={{ width: `${(solvedHard / Math.max(1, hardCount)) * 100}%` }}
                     />
                   </div>

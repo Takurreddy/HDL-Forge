@@ -131,7 +131,7 @@ export default function LessonPage({
         <h1 className="text-lg font-bold text-text-primary">{error || "Lesson not found"}</h1>
         <Link
           href="/learn"
-          className="inline-flex h-8 items-center gap-2 rounded-xl bg-accent px-4 text-xs font-semibold text-[#070707] transition-all hover:bg-accent-hover"
+          className="inline-flex h-8 items-center gap-2 rounded-xl bg-accent px-4 text-xs font-semibold text-accent-fg transition-all hover:bg-accent-hover shadow-sm"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           Back to Learn

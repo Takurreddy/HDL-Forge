@@ -161,7 +161,7 @@ export default function Navbar() {
               </Link>
               <Link
                 href="/signup"
-                className="flex items-center gap-1.5 rounded-xl bg-accent px-4 py-1.5 text-xs font-bold text-[#070707] transition-all hover:bg-accent-hover hover:shadow-[0_0_18px_rgba(0,217,165,0.35)] active:scale-95"
+                className="flex items-center gap-1.5 rounded-xl bg-accent px-4 py-1.5 text-xs font-bold text-accent-fg transition-all hover:bg-accent-hover shadow-sm active:scale-95"
               >
                 <UserPlus className="h-3.5 w-3.5" />
                 <span>Sign Up</span>
@@ -278,7 +278,7 @@ export default function Navbar() {
                 <Link
                   href="/signup"
                   onClick={() => setMobileOpen(false)}
-                  className="flex items-center justify-center gap-1 rounded-xl bg-accent py-2 text-xs font-bold text-[#070707]"
+                  className="flex items-center justify-center gap-1 rounded-xl bg-accent py-2 text-xs font-bold text-accent-fg shadow-sm"
                 >
                   Sign Up
                 </Link>

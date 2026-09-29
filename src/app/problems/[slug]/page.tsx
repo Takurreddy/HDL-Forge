@@ -470,7 +470,7 @@ export default function ProblemPage({
           </p>
           <Link
             href="/problems"
-            className="inline-flex h-8 items-center gap-2 rounded-xl bg-accent px-4 text-xs font-semibold text-[#070707] transition-all hover:bg-accent-hover"
+            className="inline-flex h-8 items-center gap-2 rounded-xl bg-accent px-4 text-xs font-semibold text-accent-fg transition-all hover:bg-accent-hover shadow-sm"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
             Return to Problems Catalog
@@ -561,7 +561,7 @@ export default function ProblemPage({
               {problemNumber}. {problem.title}
             </span>
             {isSolved && (
-              <span className="flex items-center gap-1 rounded-full bg-[#00B8A3]/10 px-2 py-0.2 text-[10px] font-semibold text-[#00B8A3] border border-[#00B8A3]/20">
+              <span className="flex items-center gap-1 rounded-full bg-emerald-500/10 dark:bg-[#00B8A3]/10 px-2 py-0.2 text-[10px] font-semibold text-emerald-700 dark:text-[#00B8A3] border border-emerald-500/20 dark:border-[#00B8A3]/20">
                 <CheckCircle2 className="h-3 w-3" />
                 Solved
               </span>
@@ -586,16 +586,16 @@ export default function ProblemPage({
             </kbd>
           </button>
 
-          {/* Submit Button (Iconic LeetCode Emerald) */}
+          {/* Submit Button */}
           <button
             onClick={handleSubmit}
             disabled={isRunning || problem.locked}
-            className="flex items-center gap-1.5 rounded-lg bg-[#00B8A3] px-3.5 py-1 text-xs font-bold text-white transition-all hover:bg-[#00B8A3]/90 hover:shadow-[0_0_16px_rgba(0,184,163,0.35)] disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
+            className="flex items-center gap-1.5 rounded-lg bg-accent px-3.5 py-1 text-xs font-bold text-accent-fg transition-all hover:bg-accent-hover shadow-sm hover:shadow-md disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
             title="Submit solution to all test cases (Ctrl + Shift + Enter)"
           >
             <Send className="h-3 w-3" />
             <span>Submit</span>
-            <kbd className="hidden md:inline rounded bg-black/20 px-1 py-0.2 text-[9px] font-mono text-white/80">
+            <kbd className="hidden md:inline rounded bg-black/20 dark:bg-black/30 px-1 py-0.2 text-[9px] font-mono text-inherit opacity-80">
               Ctrl+⇧+↵
             </kbd>
           </button>
@@ -635,7 +635,7 @@ export default function ProblemPage({
               }}
               className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold transition-all ${
                 showWaveform
-                  ? "bg-accent text-[#070707] shadow-[0_0_12px_rgba(0,217,165,0.3)]"
+                  ? "bg-accent text-accent-fg shadow-sm"
                   : "bg-surface border border-accent/30 text-accent hover:bg-accent/10"
               }`}
               title="Toggle Waveform Timing Diagram"
@@ -836,7 +836,7 @@ export default function ProblemPage({
                 )}
 
                 {/* Problem Statement Prose */}
-                <div className="prose prose-invert max-w-none text-xs leading-relaxed text-text-secondary">
+                <div className="prose dark:prose-invert max-w-none text-xs leading-relaxed text-text-secondary">
                   <p>{problem.description}</p>
                 </div>
 
@@ -1005,7 +1005,7 @@ export default function ProblemPage({
                         setNewSolutionCode(code || problem.starterCode || "");
                       }
                     }}
-                    className="flex items-center gap-1 rounded-lg bg-accent px-2.5 py-1 text-xs font-bold text-[#070707] transition-all hover:bg-accent-hover shadow-[0_0_10px_rgba(0,217,165,0.2)]"
+                    className="flex items-center gap-1 rounded-lg bg-accent px-2.5 py-1 text-xs font-bold text-accent-fg transition-all hover:bg-accent-hover shadow-sm"
                   >
                     <Sparkles className="h-3 w-3" />
                     <span>Share Solution</span>
@@ -1086,7 +1086,7 @@ export default function ProblemPage({
                       <button
                         onClick={handlePostSolution}
                         disabled={postingSolution || !newSolutionTitle.trim() || !newSolutionCode.trim()}
-                        className="flex items-center gap-1.5 rounded-lg bg-accent px-4 py-1.5 text-xs font-bold text-[#070707] transition-all hover:bg-accent-hover disabled:opacity-40"
+                        className="flex items-center gap-1.5 rounded-lg bg-accent px-4 py-1.5 text-xs font-bold text-accent-fg transition-all hover:bg-accent-hover shadow-sm disabled:opacity-40"
                       >
                         <Send className="h-3 w-3" />
                         <span>{postingSolution ? "Publishing..." : "Publish Solution"}</span>
@@ -1195,7 +1195,7 @@ export default function ProblemPage({
                             setShowPostSolution(true);
                             if (!newSolutionCode) setNewSolutionCode(code || problem.starterCode || "");
                           }}
-                          className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-xs font-bold text-[#070707] hover:bg-accent-hover"
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-xs font-bold text-accent-fg hover:bg-accent-hover shadow-sm"
                         >
                           <Sparkles className="h-3.5 w-3.5" />
                           Share Solution
@@ -1310,7 +1310,7 @@ export default function ProblemPage({
                       <button
                         onClick={handlePostDiscussion}
                         disabled={postingDiscussion || !newDiscussion.trim()}
-                        className="inline-flex h-7 items-center gap-1.5 rounded-lg bg-accent px-3 text-[10px] font-semibold text-[#070707] transition-all hover:bg-accent-hover disabled:opacity-40"
+                        className="inline-flex h-7 items-center gap-1.5 rounded-lg bg-accent px-3 text-[10px] font-semibold text-accent-fg transition-all hover:bg-accent-hover shadow-sm disabled:opacity-40"
                       >
                         <Send className="h-3 w-3" />
                         Post

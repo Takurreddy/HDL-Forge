@@ -202,7 +202,7 @@ function AdminPortalContent() {
           <button
             onClick={() => handleInlineAdminLogin()}
             disabled={inlineLoading}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-accent px-5 py-3 text-xs font-bold text-[#070707] hover:bg-accent-hover transition-all shadow-md active:scale-95 disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-accent px-5 py-3 text-xs font-bold text-accent-fg hover:bg-accent-hover transition-all shadow-md active:scale-95 disabled:opacity-50"
           >
             {inlineLoading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -275,7 +275,7 @@ function AdminPortalContent() {
           <button
             onClick={() => handleInlineAdminLogin()}
             disabled={inlineLoading}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-xs font-bold text-[#070707] hover:bg-accent-hover transition-all shadow-md active:scale-95 disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-xs font-bold text-accent-fg hover:bg-accent-hover transition-all shadow-md active:scale-95 disabled:opacity-50"
           >
             {inlineLoading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -356,7 +356,7 @@ function AdminPortalContent() {
             </button>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-xs font-bold text-[#070707] hover:bg-accent-hover transition-all shadow-md active:scale-95"
+              className="flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-xs font-bold text-accent-fg hover:bg-accent-hover transition-all shadow-md active:scale-95"
             >
               <Plus className="h-4 w-4" />
               <span>New Problem</span>
@@ -983,7 +983,7 @@ function AdminPortalContent() {
                 <button
                   type="submit"
                   disabled={creating}
-                  className="rounded-xl bg-accent px-5 py-2 font-bold text-[#070707] hover:bg-accent-hover transition-all shadow-md"
+                  className="rounded-xl bg-accent px-5 py-2 font-bold text-accent-fg hover:bg-accent-hover transition-all shadow-md"
                 >
                   {creating ? "Creating..." : "Save to Catalog"}
                 </button>

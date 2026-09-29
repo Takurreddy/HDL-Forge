@@ -412,7 +412,7 @@ export default function LearnPage() {
             onClick={() => setActiveTab("quest")}
             className={`flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs font-bold transition-all ${
               activeTab === "quest"
-                ? "bg-accent text-[#070707] shadow-[0_0_12px_rgba(0,217,165,0.25)]"
+                ? "bg-accent text-accent-fg shadow-sm"
                 : "text-text-muted hover:text-text-primary hover:bg-surface"
             }`}
           >
@@ -424,7 +424,7 @@ export default function LearnPage() {
             onClick={() => setActiveTab("library")}
             className={`flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs font-bold transition-all ${
               activeTab === "library"
-                ? "bg-accent text-[#070707] shadow-[0_0_12px_rgba(0,217,165,0.25)]"
+                ? "bg-accent text-accent-fg shadow-sm"
                 : "text-text-muted hover:text-text-primary hover:bg-surface"
             }`}
           >
@@ -436,7 +436,7 @@ export default function LearnPage() {
             onClick={() => setActiveTab("explore")}
             className={`flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs font-bold transition-all ${
               activeTab === "explore"
-                ? "bg-accent text-[#070707] shadow-[0_0_12px_rgba(0,217,165,0.25)]"
+                ? "bg-accent text-accent-fg shadow-sm"
                 : "text-text-muted hover:text-text-primary hover:bg-surface"
             }`}
           >
@@ -448,7 +448,7 @@ export default function LearnPage() {
             onClick={() => setActiveTab("study-plan")}
             className={`flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs font-bold transition-all ${
               activeTab === "study-plan"
-                ? "bg-accent text-[#070707] shadow-[0_0_12px_rgba(0,217,165,0.25)]"
+                ? "bg-accent text-accent-fg shadow-sm"
                 : "text-text-muted hover:text-text-primary hover:bg-surface"
             }`}
           >

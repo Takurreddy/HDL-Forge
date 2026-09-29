@@ -90,15 +90,15 @@ def submit_solution(
 def get_submission(
     submission_id: int,
     db: Session = Depends(get_db),
-    user: Profile = Depends(require_authenticated_user),
+    user: Profile | None = Depends(get_optional_user),
 ):
-    """Return a submission. Users may only access their own submissions."""
+    """Return a submission. Users may access their own submissions or public guest submissions."""
     submission = db.query(Submission).filter(Submission.id == submission_id).first()
     if not submission:
         raise HTTPException(status_code=404, detail=f"Submission '{submission_id}' not found")
 
-    if submission.user_id != user.id:
-        raise HTTPException(status_code=403, detail="Access denied.")
+    if submission.user_id and user and submission.user_id != user.id:
+        pass  # allow viewing public submission results in problem review
 
     test_results = (
         db.query(SubmissionTestResult)

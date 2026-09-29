@@ -182,7 +182,7 @@ export default function ContestsPage() {
               <div className="w-full space-y-2">
                 <Link
                   href={`/contests/${featuredContest.id}`}
-                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-2.5 text-xs font-bold text-[#070707] hover:bg-accent-hover hover:shadow-[0_0_16px_rgba(0,217,165,0.3)] transition-all shadow-md active:scale-95"
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-2.5 text-xs font-bold text-accent-fg hover:bg-accent-hover shadow-md active:scale-95"
                 >
                   <Trophy className="h-4 w-4" />
                   <span>Enter Contest Arena</span>
@@ -277,7 +277,7 @@ export default function ContestsPage() {
                   <div className="flex items-center gap-2 shrink-0">
                     <Link
                       href={`/contests/${c.id}`}
-                      className="flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-xs font-bold text-[#070707] hover:bg-accent-hover transition-all shadow-sm active:scale-95"
+                      className="flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-xs font-bold text-accent-fg hover:bg-accent-hover transition-all shadow-sm active:scale-95"
                     >
                       <Trophy className="h-3.5 w-3.5" />
                       <span>{isPast ? "View Arena" : "Enter Arena"}</span>

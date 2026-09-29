@@ -115,9 +115,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await loadUserProfile(authUser);
         return;
       }
-      // Check local backend token
-      const localToken = typeof window !== "undefined" ? localStorage.getItem("hdlforge_token") : null;
-      if (localToken) {
+    } catch {
+      // Supabase unavailable — fall through to local token
+    }
+    // Check local backend token
+    const localToken = typeof window !== "undefined" ? localStorage.getItem("hdlforge_token") : null;
+    if (localToken) {
+      try {
         const res = await fetch(`${API_BASE}/api/auth/me`, {
           headers: { Authorization: `Bearer ${localToken}` },
         });
@@ -138,18 +142,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           });
           return;
         }
-      }
-      setUser(null);
-    } catch {
-      setUser(null);
+      } catch {}
     }
+    setUser(null);
   }, [supabase, loadUserProfile]);
 
   useEffect(() => {
     let mounted = true;
+    // Guard: onAuthStateChange must not interfere until initAuth completes
+    let initComplete = false;
+
+    async function restoreLocalSession(): Promise<boolean> {
+      const localToken = typeof window !== "undefined" ? localStorage.getItem("hdlforge_token") : null;
+      if (!localToken || !mounted) return false;
+      try {
+        const res = await fetch(`${API_BASE}/api/auth/me`, {
+          headers: { Authorization: `Bearer ${localToken}` },
+        });
+        if (res.ok && mounted) {
+          const u = await res.json();
+          setUser({
+            id: u.id,
+            email: `${u.username}@hdlforge.local`,
+            username: u.username,
+            displayName: u.display_name,
+            avatarUrl: u.avatar_url,
+            createdAt: u.created_at,
+            lastLoginAt: u.last_login_at,
+            xp: 0,
+            level: 1,
+            solvedCount: 0,
+            isAdmin: Boolean(u.is_admin),
+          });
+          return true;
+        }
+        // Token expired or invalid — clean it up
+        syncToken(null);
+      } catch {
+        // Backend unreachable — don't nuke the token, user can retry
+      }
+      return false;
+    }
 
     async function initAuth() {
       try {
+        // 1. Check Supabase session first
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.access_token) {
           syncToken(session.access_token);
@@ -160,35 +197,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
 
-        // Check local backend token if supabase user was absent
-        const localToken = typeof window !== "undefined" ? localStorage.getItem("hdlforge_token") : null;
-        if (localToken) {
-          const res = await fetch(`${API_BASE}/api/auth/me`, {
-            headers: { Authorization: `Bearer ${localToken}` },
-          });
-          if (res.ok && mounted) {
-            const u = await res.json();
-            setUser({
-              id: u.id,
-              email: `${u.username}@hdlforge.local`,
-              username: u.username,
-              displayName: u.display_name,
-              avatarUrl: u.avatar_url,
-              createdAt: u.created_at,
-              lastLoginAt: u.last_login_at,
-              xp: 0,
-              level: 1,
-              solvedCount: 0,
-              isAdmin: Boolean(u.is_admin),
-            });
-            return;
-          }
-        }
+        // 2. No Supabase session — try local backend token
+        await restoreLocalSession();
       } catch (err) {
         console.warn("Auth initialization error:", err);
-        if (mounted) setUser(null);
+        // Last resort: try local token even if Supabase calls threw
+        try { await restoreLocalSession(); } catch {}
       } finally {
-        if (mounted) setLoading(false);
+        if (mounted) {
+          initComplete = true;
+          setLoading(false);
+        }
       }
     }
 
@@ -196,18 +215,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (!mounted) return;
+      // Skip auth state changes until initAuth finishes to prevent race conditions
+      if (!initComplete) return;
+
       if (session?.access_token) {
         syncToken(session.access_token);
       }
       if (session?.user) {
         await loadUserProfile(session.user);
       } else {
+        // Supabase session ended — only clear user if there's no local token
         const localToken = typeof window !== "undefined" ? localStorage.getItem("hdlforge_token") : null;
         if (!localToken) {
           setUser(null);
         }
       }
-      setLoading(false);
     });
 
     return () => {

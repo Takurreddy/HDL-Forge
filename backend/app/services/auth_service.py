@@ -110,7 +110,6 @@ def verify_supabase_jwt_payload(token: str) -> dict:
             raise HTTPException(status_code=401, detail=f"Invalid token: {exc}")
 
     elif alg == "HS256" and settings.SUPABASE_JWT_SECRET:
-        # HS256 path: legacy Supabase projects or unit-test local JWT
         try:
             payload = jwt.decode(
                 token,
