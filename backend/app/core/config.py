@@ -25,7 +25,13 @@ class Settings(BaseSettings):
 
     DATABASE_URL: str = ""
 
-    CORS_ORIGINS: list[str] = ["http://localhost:3000"]
+    CORS_ORIGINS: list[str] = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "https://hdl-forge.vercel.app",
+        "https://hdlforge.vercel.app",
+    ]
+    CORS_ORIGIN_REGEX: str = r"^https:\/\/.*\.vercel\.app$"
 
     HDL_EXECUTION_TIMEOUT: int = 5
     HDL_MEMORY_LIMIT: int = 256
@@ -52,16 +58,28 @@ class Settings(BaseSettings):
     SUPABASE_SERVICE_ROLE_KEY: str = ""
     SUPABASE_JWT_SECRET: str = ""
 
-    AI_ENABLED: bool = False
-    AI_PROVIDER: str = "openai"
-    AI_MODEL: str = "gpt-4o-mini"
+    AI_ENABLED: bool = True
+    AI_PROVIDER: str = "groq"
+    AI_MODEL: str = "llama-3.3-70b-versatile"
     AI_API_KEY: str = ""
+    GROQ_API_KEY: str = ""
+    GROQ_MODEL: str = "llama-3.3-70b-versatile"
     AI_MAX_INPUT_TOKENS: int = 4000
     AI_MAX_OUTPUT_TOKENS: int = 2000
-    AI_RATE_LIMIT_PER_HOUR: int = 30
-    AI_RATE_LIMIT_PER_MINUTE: int = 5
+    AI_RATE_LIMIT_PER_HOUR: int = 60
+    AI_RATE_LIMIT_PER_MINUTE: int = 15
 
     SIMULATOR: str = "icarus"
+    ADMIN_USERNAMES: str = "admin,bvsrujan,hdladmin"
+    ADMIN_EMAILS: str = "admin@hdlforge.com,bvsrujan@gmail.com"
+
+    @property
+    def admin_usernames_set(self) -> set[str]:
+        return {u.strip().lower() for u in self.ADMIN_USERNAMES.split(",") if u.strip()}
+
+    @property
+    def admin_emails_set(self) -> set[str]:
+        return {e.strip().lower() for e in self.ADMIN_EMAILS.split(",") if e.strip()}
 
     model_config = {
         "env_file": ".env",
@@ -80,6 +98,17 @@ class Settings(BaseSettings):
             return v.lower() in ("1", "true", "yes", "on")
         return bool(v)
 
+<<<<<<< HEAD
+    @field_validator("CORS_ORIGINS", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, v):
+        """Allow comma-separated list of origins or wildcard from environment variable."""
+        if isinstance(v, str):
+            if v.strip() == "*":
+                return ["*"]
+            return [orig.strip() for orig in v.split(",") if orig.strip()]
+        return v
+=======
     def verify_secret_defaults(self) -> list[str]:
         """Return a list of insecure secrets still using built-in dev defaults.
 
@@ -97,6 +126,7 @@ class Settings(BaseSettings):
         if not self.SUPABASE_URL and not self.SUPABASE_SERVICE_ROLE_KEY:
             issues.append("Supabase is unconfigured in production")
         return issues
+>>>>>>> friend/Bvs_SubBranch
 
     def get_database_url(self) -> str:
         """Return the database URL.

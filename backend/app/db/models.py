@@ -1,7 +1,7 @@
 import enum
 import uuid
 
-from sqlalchemy import DateTime, Enum, Float, ForeignKey, Integer, String, Text, UniqueConstraint, func
+from sqlalchemy import Boolean, DateTime, Enum, Float, ForeignKey, Integer, String, Text, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.database import Base
@@ -57,6 +57,7 @@ class Problem(Base):
     time_complexity: Mapped[str] = mapped_column(String(50), default="")
     space_complexity: Mapped[str] = mapped_column(String(50), default="")
     reference_solution: Mapped[str] = mapped_column(Text, default="")
+    company_tags: Mapped[str] = mapped_column(String(200), default="")
     time_limit: Mapped[int] = mapped_column(Integer, default=5)
     memory_limit: Mapped[int] = mapped_column(Integer, default=256)
     created_at: Mapped[str] = mapped_column(
@@ -132,9 +133,13 @@ class SubmissionTestResult(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     submission_id: Mapped[int] = mapped_column(ForeignKey("submissions.id"), index=True)
+<<<<<<< HEAD
+    test_case_id: Mapped[int | None] = mapped_column(ForeignKey("test_cases.id"), nullable=True)
+=======
     test_case_id: Mapped[int | None] = mapped_column(
         ForeignKey("test_cases.id"), nullable=True
     )
+>>>>>>> friend/Bvs_SubBranch
     test_name: Mapped[str] = mapped_column(String(200))
     status: Mapped[str] = mapped_column(String(50))
     score: Mapped[float] = mapped_column(Float, default=0.0)
@@ -194,6 +199,7 @@ class Profile(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
     last_login_at: Mapped[str | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    is_admin: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false", nullable=False)
 
     progress: Mapped[list["UserProblemProgress"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"

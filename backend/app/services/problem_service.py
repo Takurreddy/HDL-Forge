@@ -72,6 +72,7 @@ def _problem_to_dict(problem: Problem) -> dict:
         "time_complexity": getattr(problem, "time_complexity", "") or "",
         "space_complexity": getattr(problem, "space_complexity", "") or "",
         "reference_solution": getattr(problem, "reference_solution", "") or "",
+        "company_tags": getattr(problem, "company_tags", "") or "",
         "created_at": problem.created_at,
         "updated_at": problem.updated_at,
         "public_test_cases": public_test_cases,

@@ -13,6 +13,7 @@ from app.core.config import settings
 from app.services.ai.context_builder import AIContext, _sanitize_compiler_output, _truncate
 from app.services.ai.prompt_builder import PROMPT_BUILDERS
 from app.services.ai.providers.base import AIProvider, AIMessage, AIResponse
+from app.services.ai.providers.groq_provider import GroqProvider
 from app.services.ai.providers.openai_provider import OpenAIProvider
 
 logger = logging.getLogger(__name__)
@@ -22,7 +23,10 @@ _minute_limits: dict[int, list[float]] = defaultdict(list)
 
 
 def _get_provider() -> AIProvider:
-    return OpenAIProvider()
+    provider_name = (getattr(settings, "AI_PROVIDER", "") or "groq").lower()
+    if provider_name == "openai":
+        return OpenAIProvider()
+    return GroqProvider()
 
 
 def _check_rate_limit(user_id: str) -> bool:

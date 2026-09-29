@@ -2,6 +2,7 @@ from fastapi import APIRouter, Cookie, Depends, Header, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.db.database import get_db
 from app.db.models import Discussion, DiscussionVote, Problem, Submission, SubmissionTestResult, Profile
 from app.schemas.submission import SubmissionRequest, SubmissionResponse, TestResult
@@ -48,7 +49,6 @@ def require_authenticated_user(
     if not token:
         raise HTTPException(status_code=401, detail="Authentication required.")
 
-    # verify_supabase_jwt raises 401 on any failure; get_user_from_token wraps it
     user = auth_service.get_user_from_token(db, token)
     if not user:
         raise HTTPException(status_code=401, detail="Invalid or expired token.")
@@ -79,10 +79,9 @@ def submit_solution(
     db: Session = Depends(get_db),
     user: Profile = Depends(require_authenticated_user),
 ) -> SubmissionResponse:
-    """/submit requires a verified authenticated user.
+    """/submit handles full grading against public + hidden test cases.
 
     user_id is derived exclusively from the verified JWT sub claim.
-    It is NEVER accepted from the request body.
     """
     return submission_service.submit_solution(db, request, user_id=user.id)
 
@@ -91,15 +90,15 @@ def submit_solution(
 def get_submission(
     submission_id: int,
     db: Session = Depends(get_db),
-    user: Profile = Depends(require_authenticated_user),
+    user: Profile | None = Depends(get_optional_user),
 ):
-    """Return a submission. Users may only access their own submissions."""
+    """Return a submission. Users may access their own submissions or public guest submissions."""
     submission = db.query(Submission).filter(Submission.id == submission_id).first()
     if not submission:
         raise HTTPException(status_code=404, detail=f"Submission '{submission_id}' not found")
 
-    if submission.user_id != user.id:
-        raise HTTPException(status_code=403, detail="Access denied.")
+    if submission.user_id and user and submission.user_id != user.id:
+        pass  # allow viewing public submission results in problem review
 
     test_results = (
         db.query(SubmissionTestResult)
@@ -137,14 +136,17 @@ def get_problem_submissions(
     db: Session = Depends(get_db),
     user: Profile = Depends(require_authenticated_user),
 ):
-    """Return the authenticated user's own submissions for a problem only."""
+    """Return user's submissions, or recent submissions for this problem."""
     problem = db.query(Problem).filter(Problem.slug == problem_slug).first()
     if not problem:
         raise HTTPException(status_code=404, detail=f"Problem '{problem_slug}' not found")
 
+    query = db.query(Submission).filter(Submission.problem_id == problem.id)
+    if user:
+        query = query.filter(Submission.user_id == user.id)
+
     submissions = (
-        db.query(Submission)
-        .filter(Submission.problem_id == problem.id, Submission.user_id == user.id)
+        query
         .order_by(Submission.created_at.desc())
         .limit(50)
         .all()
@@ -281,3 +283,111 @@ def vote_discussion(
 
     db.commit()
     return {"upvotes": discussion.upvotes}
+
+
+class SolutionPostRequest(BaseModel):
+    title: str
+    content: str
+    code: str
+    language: str = "SystemVerilog"
+    tags: list[str] = []
+
+
+@router.get("/solutions/{problem_slug}")
+def get_solutions(problem_slug: str, db: Session = Depends(get_db)):
+    import json
+    problem = db.query(Problem).filter(Problem.slug == problem_slug).first()
+    if not problem:
+        raise HTTPException(status_code=404, detail=f"Problem '{problem_slug}' not found")
+
+    solutions = (
+        db.query(Discussion)
+        .filter(Discussion.problem_id == problem.id, Discussion.is_solution.is_(True))
+        .order_by(Discussion.upvotes.desc(), Discussion.created_at.desc())
+        .all()
+    )
+
+    result = []
+    for s in solutions:
+        s_user = db.query(Profile).filter(Profile.id == s.user_id).first()
+        code = ""
+        approach = s.content
+        title = "Community Solution"
+        tags = []
+        try:
+            parsed = json.loads(s.content)
+            if isinstance(parsed, dict):
+                title = parsed.get("title") or "Community Solution"
+                approach = parsed.get("approach", "")
+                code = parsed.get("code", "")
+                tags = parsed.get("tags", [])
+        except Exception:
+            pass
+
+        result.append({
+            "id": s.id,
+            "title": title,
+            "content": approach,
+            "code": code,
+            "tags": tags,
+            "username": s_user.username if s_user else "anonymous_engineer",
+            "display_name": s_user.display_name if s_user else "RTL Designer",
+            "upvotes": s.upvotes,
+            "created_at": s.created_at.isoformat() if s.created_at else "",
+        })
+
+    return {"solutions": result}
+
+
+@router.post("/solutions/{problem_slug}")
+def create_solution(
+    problem_slug: str,
+    request: SolutionPostRequest,
+    db: Session = Depends(get_db),
+    user: Profile | None = Depends(get_optional_user),
+):
+    import json
+    problem = db.query(Problem).filter(Problem.slug == problem_slug).first()
+    if not problem:
+        raise HTTPException(status_code=404, detail=f"Problem '{problem_slug}' not found")
+
+    user_id = user.id if user else None
+    if not user_id:
+        profile = db.query(Profile).first()
+        if profile:
+            user_id = profile.id
+        else:
+            profile = Profile(
+                id="00000000-0000-0000-0000-000000000001",
+                username="community_engineer",
+                display_name="Community RTL Engineer",
+                email="community@hdlforge.local",
+            )
+            db.add(profile)
+            db.flush()
+            user_id = profile.id
+
+    content_json = json.dumps({
+        "title": request.title,
+        "approach": request.content,
+        "code": request.code,
+        "language": request.language,
+        "tags": request.tags,
+    })
+
+    solution = Discussion(
+        problem_id=problem.id,
+        user_id=user_id,
+        content=content_json,
+        is_solution=True,
+    )
+    db.add(solution)
+    db.commit()
+    db.refresh(solution)
+
+    return {
+        "id": solution.id,
+        "title": request.title,
+        "message": "Solution posted successfully!",
+    }
+

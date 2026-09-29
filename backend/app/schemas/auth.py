@@ -22,6 +22,7 @@ class UserResponse(BaseModel):
     avatar_url: str | None
     created_at: datetime
     last_login_at: datetime | None
+    is_admin: bool = False
 
 
 class AuthResponse(BaseModel):

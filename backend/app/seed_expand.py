@@ -36,11 +36,19 @@ NEW_PROBLEMS = [
             "- `valid` = 1 if any input bit is 1, otherwise 0.\n"
             "- When `valid` = 0, `out` can be any value.\n\n"
             "**Example:**\n"
+<<<<<<< HEAD
+            "- `in` = 8'b00101100 → `out` = 3'd5, `valid` = 1 (bit 5 is highest)\n"
+            "- `in` = 8'b00000000 → `valid` = 0"
+        ),
+        "input_description": "in[7:0] — 8-bit input value",
+        "output_description": "out[2:0] — index of highest active bit, valid — active-high valid flag",
+=======
             "- `in` = 8'b00101100 ΓåÆ `out` = 3'd5, `valid` = 1 (bit 5 is highest)\n"
             "- `in` = 8'b00000000 ΓåÆ `valid` = 0"
         ),
         "input_description": "in[7:0] ΓÇö 8-bit input value",
         "output_description": "out[2:0] ΓÇö index of highest active bit, valid ΓÇö active-high valid flag",
+>>>>>>> friend/Bvs_SubBranch
         "constraints": "Priority is from MSB (bit 7) to LSB (bit 0). Output is combinational.",
         "starter_code": (
             "module priority_encoder (\n"
@@ -92,11 +100,19 @@ NEW_PROBLEMS = [
             "- When `mode` = 1: convert 4-bit Gray code input to binary.\n"
             "  - `binary[3] = gray[3]`, `binary[i] = binary[i+1] ^ gray[i]` for i = 2,1,0\n\n"
             "**Example:**\n"
+<<<<<<< HEAD
+            "- Binary 4'b1010 → Gray 4'b1111 (mode=0)\n"
+            "- Gray 4'b1111 → Binary 4'b1010 (mode=1)"
+        ),
+        "input_description": "in[3:0] — 4-bit input, mode — 0=binary-to-gray, 1=gray-to-binary",
+        "output_description": "out[3:0] — 4-bit converted output",
+=======
             "- Binary 4'b1010 ΓåÆ Gray 4'b1111 (mode=0)\n"
             "- Gray 4'b1111 ΓåÆ Binary 4'b1010 (mode=1)"
         ),
         "input_description": "in[3:0] ΓÇö 4-bit input, mode ΓÇö 0=binary-to-gray, 1=gray-to-binary",
         "output_description": "out[3:0] ΓÇö 4-bit converted output",
+>>>>>>> friend/Bvs_SubBranch
         "constraints": "All conversions are combinational. 4-bit width.",
         "starter_code": (
             "module gray_code_converter (\n"
@@ -139,12 +155,21 @@ NEW_PROBLEMS = [
             "- `count` = number of leading (most-significant) zero bits before the first 1.\n"
             "- `all_zeros` = 1 if input is 8'b00000000 (count would be 8).\n\n"
             "**Example:**\n"
+<<<<<<< HEAD
+            "- `in` = 8'b00101000 → `count` = 2, `all_zeros` = 0\n"
+            "- `in` = 8'b10000000 → `count` = 0, `all_zeros` = 0\n"
+            "- `in` = 8'b00000000 → `count` = 8, `all_zeros` = 1"
+        ),
+        "input_description": "in[7:0] — 8-bit input value",
+        "output_description": "count[3:0] — number of leading zeros (0-8), all_zeros — high when input is zero",
+=======
             "- `in` = 8'b00101000 ΓåÆ `count` = 2, `all_zeros` = 0\n"
             "- `in` = 8'b10000000 ΓåÆ `count` = 0, `all_zeros` = 0\n"
             "- `in` = 8'b00000000 ΓåÆ `count` = 8, `all_zeros` = 1"
         ),
         "input_description": "in[7:0] ΓÇö 8-bit input value",
         "output_description": "count[3:0] ΓÇö number of leading zeros (0-8), all_zeros ΓÇö high when input is zero",
+>>>>>>> friend/Bvs_SubBranch
         "constraints": "Output is combinational. count ranges from 0 to 8.",
         "starter_code": (
             "module leading_zero_counter (\n"
@@ -196,12 +221,21 @@ NEW_PROBLEMS = [
             "- `carry_out`: the carry out of the MSB addition.\n"
             "- `overflow`: signed overflow = carry into MSB XOR carry out of MSB.\n\n"
             "**Example:**\n"
+<<<<<<< HEAD
+            "- a=4'd3, b=4'd2, sub=0 → result=4'd5, carry_out=0, overflow=0\n"
+            "- a=4'd7, b=4'd1, sub=0 → result=4'd8, carry_out=0, overflow=1 (signed overflow: 7+1 overflows in 4-bit signed)\n"
+            "- a=4'd5, b=4'd3, sub=1 → result=4'd2, carry_out=1, overflow=0"
+        ),
+        "input_description": "a[3:0], b[3:0] — 4-bit operands, sub — 0=add, 1=subtract",
+        "output_description": "result[3:0] — operation result, carry_out — carry flag, overflow — signed overflow flag",
+=======
             "- a=4'd3, b=4'd2, sub=0 ΓåÆ result=4'd5, carry_out=0, overflow=0\n"
             "- a=4'd7, b=4'd1, sub=0 ΓåÆ result=4'd8, carry_out=0, overflow=1 (signed overflow: 7+1 overflows in 4-bit signed)\n"
             "- a=4'd5, b=4'd3, sub=1 ΓåÆ result=4'd2, carry_out=1, overflow=0"
         ),
         "input_description": "a[3:0], b[3:0] ΓÇö 4-bit operands, sub ΓÇö 0=add, 1=subtract",
         "output_description": "result[3:0] ΓÇö operation result, carry_out ΓÇö carry flag, overflow ΓÇö signed overflow flag",
+>>>>>>> friend/Bvs_SubBranch
         "constraints": "All operands are 4-bit values. Subtraction uses 2's complement.",
         "starter_code": (
             "module adder_subtractor (\n"
@@ -252,6 +286,19 @@ NEW_PROBLEMS = [
         "description": (
             "Detect rising edges, falling edges, and any edge on a signal.\n\n"
             "**Behavior:**\n"
+<<<<<<< HEAD
+            "- `pos_edge`: 1-cycle pulse on rising edge of `signal_in` (0→1).\n"
+            "- `neg_edge`: 1-cycle pulse on falling edge of `signal_in` (1→0).\n"
+            "- `any_edge`: 1-cycle pulse on any transition.\n"
+            "- All outputs reset to 0 when `rst` is asserted (synchronous, active-high).\n\n"
+            "**Example:**\n"
+            "- signal_in: 0→1 → pos_edge=1, neg_edge=0, any_edge=1\n"
+            "- signal_in: 1→0 → pos_edge=0, neg_edge=1, any_edge=1\n"
+            "- signal_in: 1→1 → pos_edge=0, neg_edge=0, any_edge=0"
+        ),
+        "input_description": "clk — clock, rst — synchronous reset, signal_in — input signal",
+        "output_description": "pos_edge — rising edge pulse, neg_edge — falling edge pulse, any_edge — any edge pulse",
+=======
             "- `pos_edge`: 1-cycle pulse on rising edge of `signal_in` (0ΓåÆ1).\n"
             "- `neg_edge`: 1-cycle pulse on falling edge of `signal_in` (1ΓåÆ0).\n"
             "- `any_edge`: 1-cycle pulse on any transition.\n"
@@ -263,6 +310,7 @@ NEW_PROBLEMS = [
         ),
         "input_description": "clk ΓÇö clock, rst ΓÇö synchronous reset, signal_in ΓÇö input signal",
         "output_description": "pos_edge ΓÇö rising edge pulse, neg_edge ΓÇö falling edge pulse, any_edge ΓÇö any edge pulse",
+>>>>>>> friend/Bvs_SubBranch
         "constraints": "Synchronous active-high reset. Edge detection uses a 1-cycle delayed version of signal_in.",
         "starter_code": (
             "module edge_detector (\n"
@@ -321,8 +369,13 @@ NEW_PROBLEMS = [
             "- Cycle 2: 8'hC0\n"
             "- ..."
         ),
+<<<<<<< HEAD
+        "input_description": "clk — clock, rst — synchronous reset, enable — shift enable",
+        "output_description": "lfsr_out[7:0] — current LFSR state",
+=======
         "input_description": "clk ΓÇö clock, rst ΓÇö synchronous reset, enable ΓÇö shift enable",
         "output_description": "lfsr_out[7:0] ΓÇö current LFSR state",
+>>>>>>> friend/Bvs_SubBranch
         "constraints": "Reset loads 8'h01. Polynomial taps at bits 7,5,4,3. Use XNOR feedback.",
         "starter_code": (
             "module lfsr_8bit (\n"
@@ -371,12 +424,21 @@ NEW_PROBLEMS = [
             "- **RED**: `green`=0, `yellow`=0, `red`=1. Stays for 5 clock cycles, then transitions to GREEN.\n"
             "- On reset, start in GREEN state.\n\n"
             "**Example:**\n"
+<<<<<<< HEAD
+            "- After reset → green=1, yellow=0, red=0\n"
+            "- sensor goes low → transition to YELLOW for 3 cycles\n"
+            "- After YELLOW → RED for 5 cycles → back to GREEN"
+        ),
+        "input_description": "clk — clock, rst — synchronous reset (active high), sensor — vehicle sensor",
+        "output_description": "green, yellow, red — one-hot traffic light outputs",
+=======
             "- After reset ΓåÆ green=1, yellow=0, red=0\n"
             "- sensor goes low ΓåÆ transition to YELLOW for 3 cycles\n"
             "- After YELLOW ΓåÆ RED for 5 cycles ΓåÆ back to GREEN"
         ),
         "input_description": "clk ΓÇö clock, rst ΓÇö synchronous reset (active high), sensor ΓÇö vehicle sensor",
         "output_description": "green, yellow, red ΓÇö one-hot traffic light outputs",
+>>>>>>> friend/Bvs_SubBranch
         "constraints": "Moore FSM. GREEN exits when sensor=0. YELLOW lasts 3 cycles. RED lasts 5 cycles. Synchronous active-high reset starts in GREEN.",
         "starter_code": (
             "module traffic_light_fsm (\n"
@@ -449,6 +511,22 @@ NEW_PROBLEMS = [
         "language": Language.SYSTEMVERILOG,
         "company_tags": "Apple, Google Silicon, Intel",
         "description": (
+<<<<<<< HEAD
+            "Convert an 8-bit binary number (0–255) to Binary-Coded Decimal (BCD).\n\n"
+            "**Algorithm (Double Dabble / Shift-and-Add-3):**\n"
+            "1. Initialize a 20-bit shift register: {hundreds[3:0], tens[3:0], ones[3:0], binary_in[7:0]}.\n"
+            "2. Repeat 8 times:\n"
+            "   a. If any BCD digit ≥ 5, add 3 to that digit.\n"
+            "   b. Left-shift the entire register by 1.\n"
+            "3. The upper 12 bits now hold the BCD digits.\n\n"
+            "**Example:**\n"
+            "- binary_in = 8'd255 → hundreds=4'd2, tens=4'd5, ones=4'd5\n"
+            "- binary_in = 8'd99  → hundreds=4'd0, tens=4'd9, ones=4'd9\n"
+            "- binary_in = 8'd0   → hundreds=4'd0, tens=4'd0, ones=4'd0"
+        ),
+        "input_description": "binary_in[7:0] — unsigned 8-bit binary number (0-255)",
+        "output_description": "hundreds[3:0], tens[3:0], ones[3:0] — BCD digits",
+=======
             "Convert an 8-bit binary number (0ΓÇô255) to Binary-Coded Decimal (BCD).\n\n"
             "**Algorithm (Double Dabble / Shift-and-Add-3):**\n"
             "1. Initialize a 20-bit shift register: {hundreds[3:0], tens[3:0], ones[3:0], binary_in[7:0]}.\n"
@@ -463,6 +541,7 @@ NEW_PROBLEMS = [
         ),
         "input_description": "binary_in[7:0] ΓÇö unsigned 8-bit binary number (0-255)",
         "output_description": "hundreds[3:0], tens[3:0], ones[3:0] ΓÇö BCD digits",
+>>>>>>> friend/Bvs_SubBranch
         "constraints": "Must be purely combinational. Input range 0-255.",
         "starter_code": (
             "module binary_to_bcd (\n"
@@ -1208,7 +1287,10 @@ def seed_new_problems() -> None:
                 _ensure_test_cases(db, existing, slug)
                 continue
 
+<<<<<<< HEAD
+=======
             problem_data.pop("company_tags", None)
+>>>>>>> friend/Bvs_SubBranch
             problem = Problem(**problem_data)
             db.add(problem)
             db.flush()

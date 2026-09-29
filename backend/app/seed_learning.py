@@ -106,6 +106,21 @@ def seed_problem_concepts(session: Session):
     session.commit()
 
 
+def seed_learning_content(session: Session | None = None) -> None:
+    should_close = False
+    if session is None:
+        from app.db.database import SessionLocal
+        session = SessionLocal()
+        should_close = True
+    try:
+        seed_concepts(session)
+        seed_problem_concepts(session)
+        seed_curriculum(session)
+    finally:
+        if should_close:
+            session.close()
+
+
 def seed_curriculum(session: Session):
     existing = session.query(LearningPath).filter(LearningPath.slug == "rtl-foundations").first()
     if existing:

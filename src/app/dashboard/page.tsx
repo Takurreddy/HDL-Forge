@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth";
+import { fetchUserDashboard } from "@/lib/api";
 import { DashboardData } from "@/lib/types";
 import {
   LayoutDashboard,
@@ -16,8 +17,6 @@ import {
   ArrowRight,
   Loader2,
 } from "lucide-react";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 const difficultyColor: Record<string, string> = {
   easy: "text-success",
@@ -49,59 +48,9 @@ export default function DashboardPage() {
 
   const fetchDashboard = useCallback(async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/me/dashboard`, { credentials: "include" });
-      if (res.ok) {
-        const data = await res.json();
-        setDashboard({
-          problemsSolved: data.problems_solved,
-          problemsAttempted: data.problems_attempted,
-          currentStreak: data.current_streak,
-          xp: data.xp,
-          level: data.level,
-          xpInCurrentLevel: data.xp_in_current_level,
-          xpForNext: data.xp_for_next,
-          rank: data.rank,
-          totalSubmissions: data.total_submissions,
-          successRate: data.success_rate,
-          difficultyStats: data.difficulty_stats.map((d: Record<string, unknown>) => ({
-            difficulty: d.difficulty, solved: d.solved, total: d.total, xp: d.xp,
-          })),
-          recentSubmissions: data.recent_submissions.map((s: Record<string, unknown>) => ({
-            id: s.id, problemSlug: s.problem_slug, problemTitle: s.problem_title,
-            difficulty: s.difficulty, score: s.score, status: s.status, createdAt: s.created_at,
-          })),
-          categoryProgress: data.category_progress.map((c: Record<string, unknown>) => ({
-            category: c.category, solved: c.solved, total: c.total,
-          })),
-          languageProgress: data.language_progress.map((l: Record<string, unknown>) => ({
-            language: l.language, solved: l.solved, total: l.total,
-          })),
-          problemProgress: data.problem_progress.map((p: Record<string, unknown>) => ({
-            problemId: p.problem_id, slug: p.slug, title: p.title,
-            difficulty: p.difficulty, status: p.status, bestScore: p.best_score, attempts: p.attempts,
-          })),
-          recentAchievements: (data.recent_achievements || []).map((a: Record<string, unknown>) => ({
-            slug: a.slug, name: a.name, description: a.description,
-            icon: a.icon, xpReward: a.xp_reward, unlockedAt: a.unlocked_at,
-          })),
-          personalBests: {
-            bestScore: data.personal_bests?.best_score || 0,
-            fastestAccepted: data.personal_bests?.fastest_accepted || null,
-            mostDifficult: data.personal_bests?.most_difficult || null,
-            longestStreak: data.personal_bests?.longest_streak || 0,
-          },
-          learningProgress: {
-            totalLessons: data.learning_progress?.total_lessons || 0,
-            completedLessons: data.learning_progress?.completed_lessons || 0,
-            inProgressLessons: data.learning_progress?.in_progress_lessons || 0,
-            progressPercent: data.learning_progress?.progress_percent || 0,
-            conceptsMastered: data.learning_progress?.concepts_mastered || 0,
-            conceptsInProgress: data.learning_progress?.concepts_in_progress || 0,
-            recentLessons: (data.learning_progress?.recent_lessons || []).map((l: Record<string, string>) => ({
-              slug: l.slug, title: l.title, completedAt: l.completed_at,
-            })),
-          },
-        });
+      const data = await fetchUserDashboard();
+      if (data) {
+        setDashboard(data);
       }
     } catch { /* Handle error */ } finally { setLoading(false); }
   }, []);

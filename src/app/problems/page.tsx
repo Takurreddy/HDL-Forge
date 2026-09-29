@@ -3,8 +3,14 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+<<<<<<< HEAD
+import { fetchProblems, fetchDailyChallenge, fetchUserDashboard } from "@/lib/api";
+import { Problem, DailyChallenge } from "@/lib/types";
+import { useAuth } from "@/lib/auth";
+=======
 import { fetchProblems, fetchDailyChallenge } from "@/lib/api";
 import { Problem, DailyChallenge } from "@/lib/types";
+>>>>>>> friend/Bvs_SubBranch
 import DifficultyBadge from "@/components/DifficultyBadge";
 import {
   Search,
@@ -24,14 +30,25 @@ import {
   Sparkles,
   Trophy,
   Shuffle,
+<<<<<<< HEAD
+  CheckCircle2,
+  Circle,
+  FileText,
+  Bookmark,
+=======
 CheckCircle2,
   Circle,
   CircleDot,
+>>>>>>> friend/Bvs_SubBranch
   ChevronRight,
   TrendingUp,
   Award,
   Filter,
   Check,
+<<<<<<< HEAD
+  Plus,
+=======
+>>>>>>> friend/Bvs_SubBranch
 } from "lucide-react";
 
 const CATEGORIES = [
@@ -100,6 +117,52 @@ export default function ProblemsPage() {
   const [category, setCategory] = useState("all");
   const [selectedCompany, setSelectedCompany] = useState("All Companies");
   const [statusFilter, setStatusFilter] = useState("all");
+<<<<<<< HEAD
+
+  const { user } = useAuth();
+  const [solvedSlugs, setSolvedSlugs] = useState<Set<string>>(new Set());
+  const [solvedStats, setSolvedStats] = useState({
+    total: 0,
+    easy: 0,
+    medium: 0,
+    hard: 0,
+  });
+
+  useEffect(() => {
+    if (!user) {
+      setSolvedSlugs(new Set());
+      setSolvedStats({ total: 0, easy: 0, medium: 0, hard: 0 });
+      return;
+    }
+
+    async function loadUserStats() {
+      try {
+        const data = await fetchUserDashboard();
+        if (data) {
+          const slugs = new Set(
+            (data.problemProgress || [])
+              .filter((p) => p.status === "SOLVED")
+              .map((p) => p.slug)
+          );
+          setSolvedSlugs(slugs);
+          const easy = data.difficultyStats.find((d) => d.difficulty.toLowerCase() === "easy")?.solved || 0;
+          const medium = data.difficultyStats.find((d) => d.difficulty.toLowerCase() === "medium")?.solved || 0;
+          const hard = data.difficultyStats.find((d) => d.difficulty.toLowerCase() === "hard")?.solved || 0;
+          setSolvedStats({
+            total: data.problemsSolved,
+            easy,
+            medium,
+            hard,
+          });
+        }
+      } catch {
+        // Ignore
+      }
+    }
+    void loadUserStats();
+  }, [user]);
+=======
+>>>>>>> friend/Bvs_SubBranch
 
   const loadProblems = useCallback(async () => {
     setLoading(true);
@@ -125,6 +188,9 @@ export default function ProblemsPage() {
     void loadProblems();
   }, [loadProblems]);
 
+<<<<<<< HEAD
+  // Client-side company and status filtering
+=======
   const getProblemStatus = (problem: Problem): "solved" | "attempted" | "not-started" => {
     const i = problems.indexOf(problem);
     if (i === 0 || i === 1) return "solved";
@@ -133,6 +199,7 @@ export default function ProblemsPage() {
   };
 
   // Client-side company + status filtering
+>>>>>>> friend/Bvs_SubBranch
   const filteredProblems = problems.filter((p) => {
     if (selectedCompany !== "All Companies") {
       if (!p.companyTags || p.companyTags.length === 0) return false;
@@ -141,11 +208,18 @@ export default function ProblemsPage() {
       );
       if (!matches) return false;
     }
+<<<<<<< HEAD
+    if (statusFilter === "solved") {
+      if (!solvedSlugs.has(p.slug)) return false;
+    } else if (statusFilter === "unsolved") {
+      if (solvedSlugs.has(p.slug)) return false;
+=======
     if (statusFilter !== "all") {
       const status = getProblemStatus(p);
       if (statusFilter === "todo" && status !== "not-started") return false;
       if (statusFilter === "solved" && status !== "solved") return false;
       if (statusFilter === "attempted" && status !== "attempted") return false;
+>>>>>>> friend/Bvs_SubBranch
     }
     return true;
   });
@@ -165,16 +239,109 @@ export default function ProblemsPage() {
   const mediumCount = filteredProblems.filter((p) => p.difficulty === "medium").length;
   const hardCount = filteredProblems.filter((p) => p.difficulty === "hard").length;
 
+<<<<<<< HEAD
+  const solvedCount = solvedStats.total;
+  const solvedEasy = solvedStats.easy;
+  const solvedMed = solvedStats.medium;
+  const solvedHard = solvedStats.hard;
+=======
   // Mock solved state (demonstrates LeetCode solved tracking)
   const solvedCount = 3;
   const solvedEasy = 2;
   const solvedMed = 1;
   const solvedHard = 0;
+>>>>>>> friend/Bvs_SubBranch
 
   return (
     <div className="mx-auto max-w-[1440px] px-4 py-6 sm:px-6 lg:px-8">
       {/* 1. Top LeetCode Study Plans Carousel */}
       <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+<<<<<<< HEAD
+        {STUDY_PLANS.map((plan) => {
+          const planCompleted = plan.id === "silicon-75"
+            ? Math.min(solvedCount, 75)
+            : plan.id === "nvidia-apple"
+            ? filteredProblems.filter((p) => p.companyTags?.some(c => c === "NVIDIA" || c === "Apple") && solvedSlugs.has(p.slug)).length
+            : Math.min(solvedCount, 20);
+
+          return (
+            <div
+              key={plan.id}
+              className={`group relative overflow-hidden rounded-2xl border ${plan.border} bg-gradient-to-br ${plan.color} p-4.5 transition-all hover:scale-[1.01] hover:shadow-lg`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="rounded-md bg-panel/80 px-2 py-0.5 text-[10px] font-mono font-bold uppercase tracking-wider text-text-primary border border-border">
+                  {plan.badge}
+                </span>
+                <span className="text-xs font-mono font-semibold text-text-dim">
+                  {planCompleted}/{plan.total} Solved
+                </span>
+              </div>
+              <h3 className="text-sm font-bold text-text-primary group-hover:text-accent transition-colors">
+                {plan.title}
+              </h3>
+              <p className="mt-1 text-xs text-text-muted line-clamp-2 leading-relaxed">
+                {plan.description}
+              </p>
+              {/* Progress bar */}
+              <div className="mt-3.5 flex items-center gap-3">
+                <div className="h-1.5 flex-1 rounded-full bg-surface overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-accent transition-all duration-500"
+                    style={{ width: `${(planCompleted / plan.total) * 100}%` }}
+                  />
+                </div>
+                <span className="text-[11px] font-mono font-bold text-text-primary">
+                  {Math.round((planCompleted / plan.total) * 100)}%
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* 2. LeetCode Daily Challenge Banner */}
+      {daily && (
+        <div className="mb-6 relative overflow-hidden rounded-2xl border border-border bg-panel p-4 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent/15 border border-accent/30 text-accent shadow-[0_0_16px_rgba(0,217,165,0.25)]">
+                <Flame className="h-5 w-5 text-accent animate-bounce" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="rounded-md bg-accent/10 px-2 py-0.5 text-[10px] font-mono font-bold uppercase tracking-wider text-accent border border-accent/20">
+                    Daily Question
+                  </span>
+                  <span className="text-xs font-mono text-text-dim flex items-center gap-1">
+                    <CalendarIcon className="h-3 w-3" />
+                    {daily.date}
+                  </span>
+                  <span className="rounded-full bg-warning/10 border border-warning/25 px-2 py-0.5 text-[10px] font-bold text-warning flex items-center gap-1">
+                    🔥 {daily.streak} Day Streak
+                  </span>
+                  <span className="rounded-md bg-surface px-2 py-0.5 text-[10px] font-mono text-text-muted border border-border">
+                    +50 XP
+                  </span>
+                </div>
+                <h3 className="mt-1 text-sm font-bold text-text-primary">
+                  {daily.problem.title}
+                </h3>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 shrink-0">
+              <DifficultyBadge difficulty={daily.problem.difficulty} size="sm" />
+              <Link
+                href={`/problems/${daily.problem.slug}`}
+                className="flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-xs font-bold text-accent-fg transition-all hover:bg-accent-hover shadow-sm active:scale-95"
+              >
+                <span>Solve Today</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+          </div>
+=======
         {STUDY_PLANS.map((plan) => (
           <div
             key={plan.id}
@@ -251,6 +418,7 @@ export default function ProblemsPage() {
               </Link>
             </div>
           </div>
+>>>>>>> friend/Bvs_SubBranch
         </div>
       )}
 
@@ -266,9 +434,15 @@ export default function ProblemsPage() {
                 <button
                   key={cat.id}
                   onClick={() => setCategory(cat.id)}
+<<<<<<< HEAD
+                  className={`flex items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-1.5 text-xs font-medium transition-all ${
+                    isSelected
+                      ? "bg-text-primary text-background font-semibold shadow-sm"
+=======
                   className={`flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium transition-all ${
                     isSelected
                       ? "bg-accent text-[#070707] font-semibold shadow-[0_0_12px_rgba(0,217,165,0.3)]"
+>>>>>>> friend/Bvs_SubBranch
                       : "bg-panel text-text-secondary border border-border hover:bg-surface hover:text-text-primary"
                   }`}
                 >
@@ -318,6 +492,21 @@ export default function ProblemsPage() {
               </select>
             </div>
 
+<<<<<<< HEAD
+            {/* Admin Add Problem Button */}
+            {user?.isAdmin && (
+              <Link
+                href="/admin?tab=problems&create=true"
+                className="flex items-center justify-center gap-1.5 rounded-xl border border-warning/50 bg-warning/15 px-3.5 py-2 text-xs font-bold text-warning transition-all hover:bg-warning/25 active:scale-95 shrink-0 shadow-sm"
+                title="Create a new problem in the catalog"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span>Add Problem</span>
+              </Link>
+            )}
+
+=======
+>>>>>>> friend/Bvs_SubBranch
             {/* Iconic LeetCode "Pick One" Random Button */}
             <button
               onClick={handlePickRandom}
@@ -340,7 +529,11 @@ export default function ProblemsPage() {
                 <button
                   key={comp}
                   onClick={() => setSelectedCompany(comp)}
+<<<<<<< HEAD
+                  className={`whitespace-nowrap rounded-md px-2 py-0.5 text-[11px] font-mono transition-all ${
+=======
                   className={`whitespace-nowrap rounded-md px-3 py-1 text-xs font-mono transition-all ${
+>>>>>>> friend/Bvs_SubBranch
                     isSelected
                       ? "bg-accent/20 text-accent border border-accent/40 font-bold"
                       : "bg-surface/60 text-text-dim border border-border hover:text-text-secondary hover:border-text-dim"
@@ -358,16 +551,31 @@ export default function ProblemsPage() {
               <table className="w-full text-left text-xs">
                 <thead>
                   <tr className="border-b border-border bg-surface/50 text-[11px] font-semibold text-text-dim">
+<<<<<<< HEAD
+                    <th className="w-12 px-4 py-3 text-center">Status</th>
+                    <th className="px-4 py-3">Title</th>
+                    <th className="w-24 px-4 py-3 text-center hidden sm:table-cell">Solution</th>
+                    <th className="w-28 px-4 py-3 text-center">Acceptance</th>
+                    <th className="w-24 px-4 py-3 text-center">Difficulty</th>
+                    <th className="w-36 px-4 py-3 text-right pr-5 hidden md:table-cell">
+                      Companies
+                    </th>
+=======
                     <th className="px-4 py-3">Title</th>
                     <th className="w-28 px-4 py-3 text-center">Acceptance</th>
                     <th className="w-24 px-4 py-3 text-center">Difficulty</th>
                     <th className="w-12 px-4 py-3 text-center">Status</th>
+>>>>>>> friend/Bvs_SubBranch
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/60">
                   {loading ? (
                     <tr>
+<<<<<<< HEAD
+                      <td colSpan={6} className="py-12 text-center text-text-muted">
+=======
                       <td colSpan={4} className="py-12 text-center text-text-muted">
+>>>>>>> friend/Bvs_SubBranch
                         <div className="flex items-center justify-center gap-2">
                           <Cpu className="h-4 w-4 animate-spin text-accent" />
                           <span>Loading hardware problem set...</span>
@@ -376,7 +584,11 @@ export default function ProblemsPage() {
                     </tr>
                   ) : filteredProblems.length === 0 ? (
                     <tr>
+<<<<<<< HEAD
+                      <td colSpan={6} className="py-12 text-center text-text-muted">
+=======
                       <td colSpan={4} className="py-12 text-center text-text-muted">
+>>>>>>> friend/Bvs_SubBranch
                         <Code2 className="mx-auto mb-2 h-7 w-7 text-text-dim" />
                         <p className="font-semibold text-text-primary">No problems found</p>
                         <p className="text-[11px] text-text-dim">Try clearing the search or filters.</p>
@@ -387,7 +599,11 @@ export default function ProblemsPage() {
                       const isChip =
                         problem.category?.toLowerCase().includes("chip") ||
                         problem.slug.includes("chip");
+<<<<<<< HEAD
+                      const isSolved = solvedSlugs.has(problem.slug);
+=======
                       const status = getProblemStatus(problem);
+>>>>>>> friend/Bvs_SubBranch
 
                       return (
                         <tr
@@ -395,6 +611,18 @@ export default function ProblemsPage() {
                           className="group transition-colors hover:bg-surface/70 cursor-pointer"
                           onClick={() => router.push(`/problems/${problem.slug}`)}
                         >
+<<<<<<< HEAD
+                          {/* Status Icon */}
+                          <td className="px-4 py-3.5 text-center">
+                            {isSolved ? (
+                              <CheckCircle2 className="mx-auto h-4 w-4 text-emerald-700 dark:text-[#00B8A3]" />
+                            ) : (
+                              <Circle className="mx-auto h-3.5 w-3.5 text-text-dim/60 group-hover:text-text-dim" />
+                            )}
+                          </td>
+
+=======
+>>>>>>> friend/Bvs_SubBranch
                           {/* Problem Title */}
                           <td className="px-4 py-3.5">
                             <div className="flex items-center gap-2 flex-wrap">
@@ -416,6 +644,16 @@ export default function ProblemsPage() {
                             </div>
                           </td>
 
+<<<<<<< HEAD
+                          {/* Solution / Editorial */}
+                          <td className="px-4 py-3.5 text-center hidden sm:table-cell">
+                            <div className="flex justify-center text-text-dim group-hover:text-accent transition-colors">
+                              <FileText className="h-3.5 w-3.5" />
+                            </div>
+                          </td>
+
+=======
+>>>>>>> friend/Bvs_SubBranch
                           {/* Acceptance Rate */}
                           <td className="px-4 py-3.5 text-center font-mono text-text-secondary">
                             {problem.acceptanceRate
@@ -428,6 +666,24 @@ export default function ProblemsPage() {
                             <DifficultyBadge difficulty={problem.difficulty} size="sm" />
                           </td>
 
+<<<<<<< HEAD
+                          {/* Company Tags */}
+                          <td className="px-4 py-3.5 text-right pr-5 hidden md:table-cell">
+                            <div className="flex items-center justify-end gap-1 flex-wrap">
+                              {problem.companyTags && problem.companyTags.length > 0 ? (
+                                problem.companyTags.slice(0, 2).map((comp) => (
+                                  <span
+                                    key={comp}
+                                    className="rounded bg-surface px-1.5 py-0.5 text-[10px] font-mono text-text-muted border border-border"
+                                  >
+                                    {comp}
+                                  </span>
+                                ))
+                              ) : (
+                                <span className="text-[10px] font-mono text-text-dim">—</span>
+                              )}
+                            </div>
+=======
                           {/* Status Icon */}
                           <td className="px-4 py-3.5 text-center">
                             {status === "solved" ? (
@@ -437,6 +693,7 @@ export default function ProblemsPage() {
                             ) : (
                               <Circle className="mx-auto h-3.5 w-3.5 text-error/70 group-hover:text-error" />
                             )}
+>>>>>>> friend/Bvs_SubBranch
                           </td>
                         </tr>
                       );
@@ -491,14 +748,22 @@ export default function ProblemsPage() {
                 {/* Easy */}
                 <div>
                   <div className="flex justify-between text-[11px] mb-1">
+<<<<<<< HEAD
+                    <span className="font-semibold text-emerald-700 dark:text-[#00B8A3]">Easy</span>
+=======
                     <span className="font-semibold text-[#00B8A3]">Easy</span>
+>>>>>>> friend/Bvs_SubBranch
                     <span className="font-mono text-text-muted">
                       {solvedEasy}/{easyCount}
                     </span>
                   </div>
                   <div className="h-1.5 w-full rounded-full bg-surface overflow-hidden">
                     <div
+<<<<<<< HEAD
+                      className="h-full bg-emerald-600 dark:bg-[#00B8A3] rounded-full"
+=======
                       className="h-full bg-[#00B8A3] rounded-full"
+>>>>>>> friend/Bvs_SubBranch
                       style={{ width: `${(solvedEasy / Math.max(1, easyCount)) * 100}%` }}
                     />
                   </div>
@@ -507,14 +772,22 @@ export default function ProblemsPage() {
                 {/* Medium */}
                 <div>
                   <div className="flex justify-between text-[11px] mb-1">
+<<<<<<< HEAD
+                    <span className="font-semibold text-amber-700 dark:text-[#FFC01E]">Medium</span>
+=======
                     <span className="font-semibold text-[#FFC01E]">Medium</span>
+>>>>>>> friend/Bvs_SubBranch
                     <span className="font-mono text-text-muted">
                       {solvedMed}/{mediumCount}
                     </span>
                   </div>
                   <div className="h-1.5 w-full rounded-full bg-surface overflow-hidden">
                     <div
+<<<<<<< HEAD
+                      className="h-full bg-amber-500 dark:bg-[#FFC01E] rounded-full"
+=======
                       className="h-full bg-[#FFC01E] rounded-full"
+>>>>>>> friend/Bvs_SubBranch
                       style={{ width: `${(solvedMed / Math.max(1, mediumCount)) * 100}%` }}
                     />
                   </div>
@@ -523,14 +796,22 @@ export default function ProblemsPage() {
                 {/* Hard */}
                 <div>
                   <div className="flex justify-between text-[11px] mb-1">
+<<<<<<< HEAD
+                    <span className="font-semibold text-rose-700 dark:text-[#FF375F]">Hard</span>
+=======
                     <span className="font-semibold text-[#FF375F]">Hard</span>
+>>>>>>> friend/Bvs_SubBranch
                     <span className="font-mono text-text-muted">
                       {solvedHard}/{hardCount}
                     </span>
                   </div>
                   <div className="h-1.5 w-full rounded-full bg-surface overflow-hidden">
                     <div
+<<<<<<< HEAD
+                      className="h-full bg-rose-500 dark:bg-[#FF375F] rounded-full"
+=======
                       className="h-full bg-[#FF375F] rounded-full"
+>>>>>>> friend/Bvs_SubBranch
                       style={{ width: `${(solvedHard / Math.max(1, hardCount)) * 100}%` }}
                     />
                   </div>

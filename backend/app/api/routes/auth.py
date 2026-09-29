@@ -43,6 +43,20 @@ def require_user(
     return user
 
 
+def check_is_admin(user: Profile) -> bool:
+    from app.core.config import settings
+    return bool(
+        getattr(user, "is_admin", False)
+        or (user.username and user.username.lower() in settings.admin_usernames_set)
+    )
+
+
+def require_admin(user: Profile = Depends(require_user)) -> Profile:
+    if not check_is_admin(user):
+        raise HTTPException(status_code=403, detail="Admin privileges required")
+    return user
+
+
 def _user_response(user: Profile) -> UserResponse:
     return UserResponse(
         id=str(user.id),
@@ -51,6 +65,7 @@ def _user_response(user: Profile) -> UserResponse:
         avatar_url=user.avatar_url,
         created_at=user.created_at,
         last_login_at=user.last_login_at,
+        is_admin=check_is_admin(user),
     )
 
 

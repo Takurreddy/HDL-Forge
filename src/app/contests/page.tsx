@@ -179,6 +179,38 @@ export default function ContestsPage() {
                 </span>
               </div>
 
+<<<<<<< HEAD
+              <div className="w-full space-y-2">
+                <Link
+                  href={`/contests/${featuredContest.id}`}
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-2.5 text-xs font-bold text-accent-fg hover:bg-accent-hover shadow-md active:scale-95"
+                >
+                  <Trophy className="h-4 w-4" />
+                  <span>Enter Contest Arena</span>
+                </Link>
+
+                <button
+                  onClick={() => handleToggleRegister(featuredContest.id)}
+                  className={`w-full flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
+                    registeredMap[featuredContest.id]
+                      ? "bg-success/20 text-success border border-success/40"
+                      : "bg-surface text-text-secondary border border-border hover:border-accent hover:text-accent"
+                  }`}
+                >
+                  {registeredMap[featuredContest.id] ? (
+                    <>
+                      <CheckCircle2 className="h-3.5 w-3.5 text-success" />
+                      <span>Registered</span>
+                    </>
+                  ) : (
+                    <>
+                      <Zap className="h-3.5 w-3.5" />
+                      <span>Quick Register</span>
+                    </>
+                  )}
+                </button>
+              </div>
+=======
               <button
                 onClick={() => handleToggleRegister(featuredContest.id)}
                 className={`w-full flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all shadow-md active:scale-95 ${
@@ -199,6 +231,7 @@ export default function ContestsPage() {
                   </>
                 )}
               </button>
+>>>>>>> friend/Bvs_SubBranch
 
               <span className="text-[10px] text-text-dim mt-2 block">
                 Free entry • Verilog / SystemVerilog
@@ -264,6 +297,21 @@ export default function ContestsPage() {
                     </div>
                   </div>
 
+<<<<<<< HEAD
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Link
+                      href={`/contests/${c.id}`}
+                      className="flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-xs font-bold text-accent-fg hover:bg-accent-hover transition-all shadow-sm active:scale-95"
+                    >
+                      <Trophy className="h-3.5 w-3.5" />
+                      <span>{isPast ? "View Arena" : "Enter Arena"}</span>
+                    </Link>
+
+                    {!isPast && (
+                      <button
+                        onClick={() => handleToggleRegister(c.id)}
+                        className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
+=======
                   <div className="flex items-center gap-3 shrink-0">
                     {isPast ? (
                       <Link
@@ -277,6 +325,7 @@ export default function ContestsPage() {
                       <button
                         onClick={() => handleToggleRegister(c.id)}
                         className={`rounded-lg px-3.5 py-1.5 text-xs font-bold transition-all ${
+>>>>>>> friend/Bvs_SubBranch
                           isRegistered
                             ? "bg-success/15 text-success border border-success/30"
                             : "bg-surface text-text-primary border border-border hover:border-accent hover:text-accent"

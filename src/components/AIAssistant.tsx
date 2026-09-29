@@ -186,7 +186,11 @@ export default function AIAssistant({
       {/* Floating Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
+<<<<<<< HEAD
+        className="fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-2xl bg-accent text-accent-fg shadow-lg transition-all hover:bg-accent-hover hover:scale-105 active:scale-95"
+=======
         className="fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-2xl bg-accent text-on-accent shadow-lg transition-all hover:bg-accent-hover hover:shadow-[0_0_24px_rgba(34,197,94,0.4)] hover:scale-105"
+>>>>>>> friend/Bvs_SubBranch
         title="AI Tutor"
       >
         <Sparkles className="h-5 w-5" />
@@ -256,8 +260,8 @@ export default function AIAssistant({
                     <div
                       className={`max-w-[85%] rounded-xl px-3 py-2 text-xs ${
                         msg.role === "user"
-                          ? "bg-accent/15 text-accent"
-                          : "bg-surface text-text-secondary"
+                          ? "bg-accent text-accent-fg font-medium shadow-sm"
+                          : "bg-surface text-text-primary border border-border/80"
                       }`}
                     >
                       <div className="whitespace-pre-wrap break-words leading-relaxed">{msg.content}</div>
@@ -308,7 +312,11 @@ export default function AIAssistant({
                     <button
                       onClick={() => handleSend("ask")}
                       disabled={!inputValue.trim() || isLoading}
+<<<<<<< HEAD
+                      className="flex h-8 w-8 items-center justify-center rounded-xl bg-accent text-accent-fg transition-all hover:bg-accent-hover disabled:opacity-40 shadow-sm"
+=======
                       className="flex h-8 w-8 items-center justify-center rounded-xl bg-accent text-on-accent transition-all hover:bg-accent-hover disabled:opacity-40"
+>>>>>>> friend/Bvs_SubBranch
                     >
                       <Send className="h-3.5 w-3.5" />
                     </button>

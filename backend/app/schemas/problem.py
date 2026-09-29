@@ -16,6 +16,7 @@ class ProblemBase(BaseModel):
     output_description: str = ""
     constraints: str = ""
     starter_code: str = ""
+    company_tags: str = ""
 
 
 class ProblemCreate(ProblemBase):

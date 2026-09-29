@@ -34,6 +34,7 @@ from app.services.achievement_service import (
     calculate_level,
     evaluate_achievements,
 )
+from app.core.config import settings
 from app.services.waveform_service import waveform_storage
 
 logger = logging.getLogger(__name__)
@@ -50,7 +51,7 @@ class JudgeService:
     """Orchestrates HDL testing with public/hidden test separation and weighted scoring."""
 
     def __init__(self, runner: ExecutionRunner | None = None) -> None:
-        self.runner = runner or ExecutionRunner(use_docker=False)
+        self.runner = runner or ExecutionRunner(use_docker=settings.HDL_USE_DOCKER)
 
     def judge_run(
         self,
@@ -67,10 +68,10 @@ class JudgeService:
                 submission_id=0,
             )
 
-        if request.language.value != "SYSTEMVERILOG":
+        if request.language.value not in ("SYSTEMVERILOG", "VERILOG"):
             return SubmissionResponse(
                 status="error",
-                message="Only SystemVerilog is currently supported.",
+                message=f"Language '{request.language.value}' is not supported.",
                 submission_id=0,
             )
 
@@ -120,10 +121,10 @@ class JudgeService:
                 submission_id=0,
             )
 
-        if request.language.value != "SYSTEMVERILOG":
+        if request.language.value not in ("SYSTEMVERILOG", "VERILOG"):
             return SubmissionResponse(
                 status="error",
-                message="Only SystemVerilog is currently supported.",
+                message=f"Language '{request.language.value}' is not supported.",
                 submission_id=0,
             )
 
@@ -269,9 +270,14 @@ class JudgeService:
 
         for te in test_executions:
             if te.result:
+                tc_id = te.test_case.id if (te.test_case and te.test_case.id and te.test_case.id > 0) else None
                 str_result = SubmissionTestResult(
                     submission_id=submission.id,
+<<<<<<< HEAD
+                    test_case_id=tc_id,
+=======
                     test_case_id=te.test_case.id if te.test_case.id else None,
+>>>>>>> friend/Bvs_SubBranch
                     test_name=te.test_case.name,
                     status="PASSED" if te.result.passed else "FAILED",
                     score=te.score,
@@ -365,16 +371,19 @@ class JudgeService:
                 user_id=user_id,
                 problem_id=problem.id,
                 status=ProgressStatus.NOT_STARTED,
+                attempts=0,
+                best_score=0.0,
             )
             db.add(progress)
 
-        progress.attempts += 1
+        progress.attempts = (progress.attempts or 0) + 1
         progress.last_attempt_at = datetime.now(timezone.utc)
 
-        if score > progress.best_score:
+        current_best = progress.best_score if progress.best_score is not None else 0.0
+        if score > current_best:
             progress.best_score = float(score)
 
-        user.total_submissions += 1
+        user.total_submissions = (user.total_submissions or 0) + 1
 
         xp_earned = 0
         progress_status = None
@@ -382,9 +391,9 @@ class JudgeService:
         if final_status == "PASSED":
             if progress.status != ProgressStatus.SOLVED:
                 xp_earned = award_solve_xp(user, problem)
-                user.xp += xp_earned
+                user.xp = (user.xp or 0) + xp_earned
                 user.level = calculate_level(user.xp)
-                user.solved_count += 1
+                user.solved_count = (user.solved_count or 0) + 1
             progress.status = ProgressStatus.SOLVED
             if not progress.solved_at:
                 progress.solved_at = datetime.now(timezone.utc)

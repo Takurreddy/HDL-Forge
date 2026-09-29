@@ -2,6 +2,30 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+<<<<<<< HEAD
+@theme inline {
+  --color-background: var(--bg);
+  --color-foreground: var(--fg);
+  --color-panel: var(--panel);
+  --color-editor: var(--editor);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --color-border-subtle: var(--border-subtle);
+  --color-accent: var(--accent);
+  --color-accent-dim: var(--accent-dim);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-fg: var(--accent-fg);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-text-dim: var(--text-dim);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+  --color-info: var(--info);
+  --font-sans: "Inter", var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", var(--font-geist-mono), "Fira Code", monospace;
+=======
 @theme {
   --color-background: #070707;
   --color-foreground: #ffffff;
@@ -51,9 +75,71 @@
 
 .dark {
   color-scheme: dark;
+>>>>>>> friend/Bvs_SubBranch
+}
+
+/* Light Theme (Clean Silicon CAD Blueprint Mode - High Contrast & Crisp Elevation) */
+:root {
+  --bg: #F8FAFC;
+  --fg: #0F172A;
+  --panel: #FFFFFF;
+  --editor: #FFFFFF;
+  --surface: #F1F5F9;
+  --border: #E2E8F0;
+  --border-subtle: #F1F5F9;
+  --accent: #0D9488;
+  --accent-dim: rgba(13, 148, 136, 0.12);
+  --accent-hover: #0F766E;
+  --accent-fg: #FFFFFF;
+  --text-primary: #0F172A;
+  --text-secondary: #334155;
+  --text-muted: #64748B;
+  --text-dim: #94A3B8;
+  --success: #059669;
+  --warning: #D97706;
+  --error: #DC2626;
+  --info: #0284C7;
+  --card-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.06), 0 10px 15px -3px rgba(15, 23, 42, 0.04), 0 0 0 1px rgba(15, 23, 42, 0.05);
+}
+
+/* Dark Theme (Cyber Silicon Foundry / Deep Slate Mode) */
+.dark, [data-theme="dark"] {
+  --bg: #080A10;
+  --fg: #F8FAFC;
+  --panel: #0E131F;
+  --editor: #121826;
+  --surface: #151D2E;
+  --border: #1E293B;
+  --border-subtle: #172033;
+  --accent: #00E5A3;
+  --accent-dim: rgba(0, 229, 163, 0.15);
+  --accent-hover: #14F4B4;
+  --accent-fg: #070707;
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+  --text-dim: #475569;
+  --success: #00E5A3;
+  --warning: #FBBF24;
+  --error: #F87171;
+  --info: #38BDF8;
+  --card-shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(30, 41, 59, 0.8);
 }
 
 body {
+<<<<<<< HEAD
+  background: var(--bg);
+  color: var(--fg);
+  font-family: "Inter", var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-fg);
+=======
   background-color: var(--color-background);
   color: var(--color-foreground);
   font-family: var(--font-sans);
@@ -75,6 +161,7 @@ h6 {
 ::selection {
   background: color-mix(in srgb, var(--color-accent) 30%, transparent);
   color: var(--color-foreground);
+>>>>>>> friend/Bvs_SubBranch
 }
 
 ::-webkit-scrollbar {
@@ -87,17 +174,29 @@ h6 {
 }
 
 ::-webkit-scrollbar-thumb {
+<<<<<<< HEAD
+  background: var(--border);
+=======
   background: var(--color-border);
+>>>>>>> friend/Bvs_SubBranch
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
+<<<<<<< HEAD
+  background: var(--text-dim);
+=======
   background: var(--color-text-dim);
+>>>>>>> friend/Bvs_SubBranch
 }
 
 * {
   scrollbar-width: thin;
+<<<<<<< HEAD
+  scrollbar-color: var(--border) transparent;
+=======
   scrollbar-color: var(--color-border) transparent;
+>>>>>>> friend/Bvs_SubBranch
 }
 
 input,
@@ -113,6 +212,25 @@ code,
 }
 
 .glow-accent {
+<<<<<<< HEAD
+  box-shadow: 0 0 20px var(--accent-dim), 0 4px 12px rgba(15, 23, 42, 0.05);
+}
+
+.glow-accent-sm {
+  box-shadow: 0 0 10px var(--accent-dim);
+}
+
+.panel-shadow {
+  box-shadow: var(--card-shadow);
+}
+
+.gradient-accent {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+}
+
+.gradient-accent-text {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--info) 100%);
+=======
   box-shadow: 0 0 20px color-mix(in srgb, var(--color-accent) 15%, transparent), 0 0 40px color-mix(in srgb, var(--color-accent) 5%, transparent);
 }
 
@@ -130,12 +248,27 @@ code,
 
 .gradient-accent-text {
   background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-hover) 100%);
+>>>>>>> friend/Bvs_SubBranch
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .glass-panel {
+<<<<<<< HEAD
+  background: var(--panel);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  box-shadow: var(--card-shadow);
+}
+
+.glass-button {
+  background: var(--surface);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+=======
   background: color-mix(in srgb, var(--color-panel) 72%, transparent);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -148,10 +281,15 @@ code,
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent);
+>>>>>>> friend/Bvs_SubBranch
   transition: all 0.2s ease;
 }
 
 .glass-button:hover {
+<<<<<<< HEAD
+  background: var(--surface);
+  border-color: var(--accent);
+=======
   background: color-mix(in srgb, var(--color-surface) 85%, transparent);
   border-color: color-mix(in srgb, var(--color-accent) 40%, transparent);
 }
@@ -172,6 +310,7 @@ code,
 
 .btn-3d:active {
   transform: translateY(1px) translateZ(0);
+>>>>>>> friend/Bvs_SubBranch
 }
 
 @keyframes stats-marquee {

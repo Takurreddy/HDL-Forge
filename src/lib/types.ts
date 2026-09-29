@@ -124,6 +124,7 @@ export interface User {
   xp: number;
   level: number;
   solvedCount: number;
+  isAdmin?: boolean;
 }
 
 export interface DashboardData {

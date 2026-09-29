@@ -90,13 +90,14 @@ def _auth_header(cookies):
 
 class TestAIDisabledByDefault:
     def test_chat_returns_503_when_disabled(self, client, auth_cookie):
-        response = client.post(
-            "/api/ai/chat",
-            json={"task": "explain_code", "code": "module test; endmodule"},
-            headers=_auth_header(auth_cookie),
-        )
-        assert response.status_code == 503
-        assert "disabled" in response.json()["detail"].lower()
+        with patch("app.api.routes.ai.settings.AI_ENABLED", False):
+            response = client.post(
+                "/api/ai/chat",
+                json={"task": "explain_code", "code": "module test; endmodule"},
+                headers=_auth_header(auth_cookie),
+            )
+            assert response.status_code == 503
+            assert "disabled" in response.json()["detail"].lower()
 
 
 class TestAIProviderAbstraction:

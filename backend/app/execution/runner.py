@@ -8,7 +8,6 @@ from app.execution.limits import ExecutionLimits
 from app.execution.workspace import ExecutionWorkspace
 from app.sandbox.docker import DockerSandbox
 from app.simulator.base import HDLSimulator, SimulationResult, SimulationStatus
-from app.simulator import get_simulator
 from app.schemas.submission import (
     SubmissionResponse,
     TestResult,
@@ -30,9 +29,23 @@ class ExecutionJob:
 class ExecutionRunner:
     """Coordinates the full HDL execution pipeline."""
 
-    def __init__(self, use_docker: bool = True) -> None:
-        self.use_docker = use_docker
-        self.sandbox = DockerSandbox() if use_docker else None
+    def __init__(self, use_docker: bool | None = None) -> None:
+        if use_docker is None:
+            use_docker = getattr(settings, "HDL_USE_DOCKER", True)
+        self.use_docker = bool(use_docker and self._is_docker_daemon_running())
+        self.sandbox = DockerSandbox() if self.use_docker else None
+
+    @staticmethod
+    def _is_docker_daemon_running() -> bool:
+        import shutil
+        import subprocess
+        if not shutil.which("docker"):
+            return False
+        try:
+            res = subprocess.run(["docker", "info"], capture_output=True, timeout=2)
+            return res.returncode == 0
+        except Exception:
+            return False
 
     def execute(self, job: ExecutionJob) -> SubmissionResponse:
         start_time = time.time()
@@ -46,10 +59,14 @@ class ExecutionRunner:
 
             workspace.write_testbench(testbench_code)
 
+            from app.simulator import get_simulator
             simulator = get_simulator(settings.SIMULATOR, workspace=workspace, limits=job.limits)
 
             if self.use_docker and self.sandbox is not None:
                 result = self._execute_in_sandbox(workspace, job, simulator)
+                if result.status == SimulationStatus.SYSTEM_ERROR and "Sandbox" in result.message:
+                    logger.warning("Sandbox failed (%s), falling back to direct execution", result.message)
+                    result = self._execute_direct(workspace, job, simulator, job.waveform_enabled)
             else:
                 result = self._execute_direct(workspace, job, simulator, job.waveform_enabled)
 
@@ -96,6 +113,13 @@ class ExecutionRunner:
         if compile_result.status != SimulationStatus.COMPILATION_OK:
             return compile_result
 
+<<<<<<< HEAD
+        binary_path = (
+            workspace.workspace_path / "simulation.out"
+            if settings.SIMULATOR.lower() == "icarus"
+            else workspace.workspace_path / "obj_dir" / "Vtestbench"
+        )
+=======
         # Each simulator knows where it places its compiled output.
         # Verilator → obj_dir/Vtestbench  |  Icarus → simulation.out
         from app.simulator.icarus import IcarusSimulator
@@ -104,6 +128,7 @@ class ExecutionRunner:
         else:
             binary_path = workspace.workspace_path / "obj_dir" / "Vtestbench"
 
+>>>>>>> friend/Bvs_SubBranch
         return simulator.simulate(binary_path=binary_path)
 
     def _execute_in_sandbox(
