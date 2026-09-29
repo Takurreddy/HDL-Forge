@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-﻿{
-=======
-∩╗┐{
->>>>>>> friend/Bvs_SubBranch
+{
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs"
 }
