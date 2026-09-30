@@ -98,7 +98,6 @@ class Settings(BaseSettings):
             return v.lower() in ("1", "true", "yes", "on")
         return bool(v)
 
-<<<<<<< HEAD
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
     def parse_cors_origins(cls, v):
@@ -108,14 +107,9 @@ class Settings(BaseSettings):
                 return ["*"]
             return [orig.strip() for orig in v.split(",") if orig.strip()]
         return v
-=======
-    def verify_secret_defaults(self) -> list[str]:
-        """Return a list of insecure secrets still using built-in dev defaults.
 
-        Empty when safe. Called at import time (non-fatal on purpose so local
-        development and tests keep working); production deployments should
-        surface the returned warnings loudly.
-        """
+    def verify_secret_defaults(self) -> list[str]:
+        """Return a list of insecure secrets still using built-in dev defaults."""
         issues: list[str] = []
         if self.DEBUG is not False:
             return issues
@@ -123,10 +117,7 @@ class Settings(BaseSettings):
             issues.append("JWT_SECRET is the dev default; set a strong unique value in production")
         if not self.DATABASE_URL and self.POSTGRES_PASSWORD == DEV_POSTGRES_PASSWORD:
             issues.append("POSTGRES_PASSWORD is the dev default; set a real password in production")
-        if not self.SUPABASE_URL and not self.SUPABASE_SERVICE_ROLE_KEY:
-            issues.append("Supabase is unconfigured in production")
         return issues
->>>>>>> friend/Bvs_SubBranch
 
     def get_database_url(self) -> str:
         """Return the database URL.
