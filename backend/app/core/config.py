@@ -1,8 +1,13 @@
 import logging
+import os
 import secrets
+import ipaddress
+from typing import Literal
+from urllib.parse import urlsplit
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
+from sqlalchemy.engine import URL
 
 logger = logging.getLogger(__name__)
 
@@ -13,6 +18,7 @@ DEV_POSTGRES_PASSWORD = "hdlforge"
 
 
 class Settings(BaseSettings):
+    ENVIRONMENT: Literal["development", "production"] = "development"
     PROJECT_NAME: str = "HDLForge"
     API_V1_PREFIX: str = "/api"
     DEBUG: bool = False
@@ -31,7 +37,13 @@ class Settings(BaseSettings):
         "https://hdl-forge.vercel.app",
         "https://hdlforge.vercel.app",
     ]
-    CORS_ORIGIN_REGEX: str = r"^https:\/\/.*\.vercel\.app$"
+    CORS_ORIGIN_REGEX: str = ""
+    HDL_WORKER_URL: str = ""
+    HDL_WORKER_TOKEN: str = ""
+    HDL_WORKER_MAX_CONCURRENT_JOBS: int = 2
+    HDL_SANDBOX_IMAGE: str = "hdlforge-sandbox:latest"
+    HDL_EXECUTION_RATE_LIMIT_PER_MINUTE: int = 10
+    HDL_EXECUTION_RATE_LIMIT_PER_HOUR: int = 60
 
     HDL_EXECUTION_TIMEOUT: int = 5
     HDL_MEMORY_LIMIT: int = 256
@@ -71,7 +83,7 @@ class Settings(BaseSettings):
 
     SIMULATOR: str = "icarus"
     ADMIN_USERNAMES: str = "admin,bvsrujan,hdladmin"
-    ADMIN_EMAILS: str = "admin@hdlforge.com,bvsrujan@gmail.com"
+    ADMIN_EMAILS: str = ""
 
     @property
     def admin_usernames_set(self) -> set[str]:
@@ -134,10 +146,72 @@ class Settings(BaseSettings):
                 "DATABASE_URL or POSTGRES_HOST must be set. "
                 "SQLite is not supported in this application."
             )
-        return (
-            f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
-            f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
-        )
+        return URL.create(
+            "postgresql",
+            username=self.POSTGRES_USER,
+            password=self.POSTGRES_PASSWORD,
+            host=self.POSTGRES_HOST,
+            port=self.POSTGRES_PORT,
+            database=self.POSTGRES_DB,
+        ).render_as_string(hide_password=False)
+
+    def validate_production(self) -> None:
+        if self.ENVIRONMENT != "production":
+            return
+        if "ENVIRONMENT" not in self.model_fields_set:
+            raise RuntimeError("ENVIRONMENT=production must be explicitly configured.")
+        if "JWT_SECRET" not in self.model_fields_set or len(self.JWT_SECRET) < 32:
+            raise RuntimeError("Production requires an explicitly configured JWT_SECRET of at least 32 characters.")
+        if self.DEBUG:
+            raise RuntimeError("Production requires DEBUG=false.")
+        if not self.SUPABASE_URL:
+            raise RuntimeError("Production authentication requires SUPABASE_URL; local password authentication is disabled.")
+        supabase_url = urlsplit(self.SUPABASE_URL)
+        if supabase_url.scheme != "https" or not supabase_url.hostname:
+            raise RuntimeError("Production SUPABASE_URL must use HTTPS.")
+        if "ADMIN_EMAILS" not in self.model_fields_set or not self.admin_emails_set:
+            raise RuntimeError("Production requires an explicit ADMIN_EMAILS allowlist of verified administrator accounts.")
+        if not self.HDL_USE_DOCKER:
+            raise RuntimeError("Production requires HDL_USE_DOCKER=true.")
+        if not self.HDL_WORKER_URL or not self.HDL_WORKER_TOKEN or len(self.HDL_WORKER_TOKEN) < 32:
+            raise RuntimeError("Production requires a private HDL_WORKER_URL and a shared token of at least 32 characters.")
+        worker_url = urlsplit(self.HDL_WORKER_URL)
+        worker_host = worker_url.hostname
+        worker_is_private = False
+        if worker_host:
+            try:
+                worker_is_private = ipaddress.ip_address(worker_host).is_private
+            except ValueError:
+                worker_is_private = (
+                    worker_host in {"localhost"}
+                    or worker_host.endswith((".internal", ".local"))
+                    or "." not in worker_host
+                )
+        if worker_url.username or worker_url.password or not (
+            (worker_url.scheme == "https" and worker_host)
+            or (worker_url.scheme == "http" and worker_is_private)
+        ):
+            raise RuntimeError("HDL_WORKER_URL must be HTTPS or use a private/internal HTTP address.")
+        if not self.HDL_SANDBOX_IMAGE.strip():
+            raise RuntimeError("HDL_SANDBOX_IMAGE must name the hardened sandbox image.")
+        if "CORS_ORIGINS" not in self.model_fields_set or not self.CORS_ORIGINS:
+            raise RuntimeError("Production requires explicitly configured frontend CORS_ORIGINS.")
+        for origin in self.CORS_ORIGINS:
+            parsed_origin = urlsplit(origin)
+            if (
+                parsed_origin.scheme != "https"
+                or not parsed_origin.hostname
+                or parsed_origin.username
+                or parsed_origin.password
+                or parsed_origin.path != ""
+                or parsed_origin.query
+                or parsed_origin.fragment
+            ):
+                raise RuntimeError("Production CORS_ORIGINS must contain exact HTTPS origins only.")
+        if self.CORS_ORIGIN_REGEX:
+            raise RuntimeError("CORS_ORIGIN_REGEX must be empty in production; configure exact origins instead.")
+        if not self.DATABASE_URL and self.POSTGRES_PASSWORD == DEV_POSTGRES_PASSWORD:
+            raise RuntimeError("Production must use a non-default PostgreSQL password.")
 
 
 settings = Settings()

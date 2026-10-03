@@ -1,3 +1,8 @@
+import threading
+import time
+from collections import defaultdict
+from datetime import datetime, timedelta, timezone
+
 from fastapi import APIRouter, Cookie, Depends, Header, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -10,6 +15,54 @@ from app.services import submission_service
 from app.services import auth_service
 
 router = APIRouter(prefix="/submissions", tags=["submissions"])
+_execution_requests: dict[str, list[float]] = defaultdict(list)
+_execution_requests_lock = threading.Lock()
+_last_execution_request_cleanup = 0.0
+
+
+def _allow_execution(user_id: str) -> bool:
+    global _last_execution_request_cleanup
+    now = time.monotonic()
+    minute_cutoff = now - 60
+    hour_cutoff = now - 3600
+    with _execution_requests_lock:
+        if now - _last_execution_request_cleanup >= 300:
+            stale_users = [
+                stored_user_id
+                for stored_user_id, stamps in _execution_requests.items()
+                if not any(stamp > hour_cutoff for stamp in stamps)
+            ]
+            for stored_user_id in stale_users:
+                _execution_requests.pop(stored_user_id, None)
+            _last_execution_request_cleanup = now
+        recent = [stamp for stamp in _execution_requests[user_id] if stamp > hour_cutoff]
+        if sum(stamp > minute_cutoff for stamp in recent) >= settings.HDL_EXECUTION_RATE_LIMIT_PER_MINUTE:
+            _execution_requests[user_id] = recent
+            return False
+        if len(recent) >= settings.HDL_EXECUTION_RATE_LIMIT_PER_HOUR:
+            _execution_requests[user_id] = recent
+            return False
+        recent.append(now)
+        _execution_requests[user_id] = recent
+        return True
+
+
+def _enforce_production_execution_limit(user: Profile, db: Session) -> None:
+    if settings.ENVIRONMENT != "production":
+        return
+    now = datetime.now(timezone.utc)
+    recent_hour = db.query(Submission).filter(
+        Submission.user_id == user.id,
+        Submission.created_at >= now - timedelta(hours=1),
+    ).count()
+    if recent_hour >= settings.HDL_EXECUTION_RATE_LIMIT_PER_HOUR:
+        raise HTTPException(status_code=429, detail="Hourly HDL execution rate limit exceeded.")
+    recent_minute = db.query(Submission).filter(
+        Submission.user_id == user.id,
+        Submission.created_at >= now - timedelta(minutes=1),
+    ).count()
+    if recent_minute >= settings.HDL_EXECUTION_RATE_LIMIT_PER_MINUTE or not _allow_execution(str(user.id)):
+        raise HTTPException(status_code=429, detail="Per-minute HDL execution rate limit exceeded.")
 
 
 def _extract_bearer_token(
@@ -61,15 +114,22 @@ def run_submission(
     db: Session = Depends(get_db),
     user: Profile | None = Depends(get_optional_user),
 ) -> SubmissionResponse:
-    """/run is anonymous-capable ONLY because:
+    """Run the public test cases for a problem.
+
+    Development keeps the guest-run flow. Production requires an authenticated
+    account and applies per-user request limits before starting HDL execution.
+
+    The sandbox requirements are:
     - execution runs exclusively inside the Docker sandbox
     - strict CPU/time/memory/process limits are enforced by ExecutionLimits
     - no database submission record is created for anonymous runs
     - no hidden test cases are exposed (judge_run uses PUBLIC tests only)
 
-    PRODUCTION NOTE: rate limiting / abuse protection must be added at the
-    reverse-proxy or API-gateway layer before public deployment.
     """
+    if settings.ENVIRONMENT == "production":
+        if not user:
+            raise HTTPException(status_code=401, detail="Sign in before running HDL in production.")
+        _enforce_production_execution_limit(user, db)
     return submission_service.run_submission(db, request, user_id=user.id if user else None)
 
 
@@ -83,6 +143,7 @@ def submit_solution(
 
     user_id is derived exclusively from the verified JWT sub claim.
     """
+    _enforce_production_execution_limit(user, db)
     return submission_service.submit_solution(db, request, user_id=user.id)
 
 

@@ -7,6 +7,7 @@ import {
   UserAchievementsResponse,
   Achievement,
   Discussion,
+  DiscussionReply,
   ProblemSubmission,
 } from "../types";
 
@@ -306,7 +307,7 @@ export async function supabaseFetchDiscussions(slug: string): Promise<Discussion
       .not("parent_id", "is", null)
       .order("created_at", { ascending: true });
 
-    const replyMap = new Map<number, any[]>();
+    const replyMap = new Map<number, DiscussionReply[]>();
     for (const r of replies || []) {
       const pId = r.parent_id;
       if (!replyMap.has(pId)) replyMap.set(pId, []);

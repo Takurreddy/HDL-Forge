@@ -56,7 +56,7 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    if (user) { void fetchDashboard(); }
+    if (user) queueMicrotask(() => void fetchDashboard());
   }, [user, fetchDashboard]);
 
   if (authLoading || !user) {

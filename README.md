@@ -5,40 +5,22 @@ A browser-based HDL (Hardware Description Language) practice platform built with
 ## Architecture
 
 ```
-            HDLForge
-               |
-      +--------+--------+
-      |                 |
-  Next.js            FastAPI
-      |                 |
-      |             PostgreSQL
-      |
-  Monaco Editor
-      |
-  Run / Submit
-      |
-      +---------------> API
-                            |
-                      Execution Engine
-                            |
-                      +-----+-----+
-                      |           |
-                   Docker     Direct
-                   Sandbox    Execution
-                      |           |
-                      +-----+-----+
-                            |
-                      Verilator
-                            |
-                      Testbench
-                            |
-                      Result Parser
+Vercel: Next.js frontend
+          |                     \
+          | HTTPS                 \ Supabase Auth
+          v                       \
+FastAPI API -----------------> PostgreSQL
+          |
+          | private HTTPS or VPC + shared token
+          v
+Private HDL worker -- Docker socket --> Isolated sandbox container
+                                      (Icarus / Verilator)
 ```
 
 ## Requirements
 
 - **Python** 3.11+
-- **Node.js** 18+
+- **Node.js** 20.9+ (required by Next.js 16)
 - **PostgreSQL** 14+
 - **Verilator** (for direct execution mode)
 - **Docker** (optional, for sandboxed execution)
@@ -110,17 +92,82 @@ Set in `backend/.env`:
 HDL_USE_DOCKER=false
 ```
 
-**Option B: Docker Sandbox (Recommended for Production)**
+**Option B: Private Docker Worker (Required for production)**
 
-```bash
-cd docker/hdl-sandbox
-docker build -t hdlforge-sandbox:latest .
-```
+The public API does not receive Docker socket access. It sends authenticated
+execution requests to a private worker, which launches short lived containers
+from the hardened sandbox image. Run the worker on a dedicated Docker host in
+the same private network as the API. The Docker socket gives the worker host
+level control, so keep the worker trusted, firewalled, and unavailable from the
+public internet.
 
-Set in `backend/.env`:
-```
-HDL_USE_DOCKER=true
-```
+### Production deployment
+
+The supported topology is a Vercel frontend, a FastAPI API service with
+PostgreSQL, and a private HDL worker on a Docker enabled host. No deployment is
+performed by these instructions; provision the services and secrets first.
+
+1. Build the sandbox image on the worker host:
+
+   ```bash
+   docker build -f backend/sandbox.Dockerfile -t hdlforge-sandbox:latest backend
+   ```
+
+2. Build and start the worker on that host. Create a private environment file
+   containing `HDL_WORKER_TOKEN` (a random secret with at least 32 characters),
+   `HDL_SANDBOX_IMAGE=hdlforge-sandbox:latest`, `HDL_USE_DOCKER=true`, and the
+   simulator/resource limits from `backend/.env.example`.
+
+   ```bash
+   docker build -f backend/worker.Dockerfile -t hdlforge-worker:latest backend
+   docker run -d --restart unless-stopped --name hdlforge-worker \
+     --env-file worker.env \
+     -p 10.10.0.5:8001:8001 \
+     -v /var/run/docker.sock:/var/run/docker.sock \
+     hdlforge-worker:latest
+   ```
+
+   Replace `10.10.0.5` with the worker host's private address. Permit port 8001
+   only from the API service's private network. Set the worker container's
+   `HDL_WORKER_TOKEN` to the same secret configured on the API.
+
+3. Build the API image and deploy it without mounting the Docker socket:
+
+   ```bash
+   docker build -f backend/Dockerfile -t hdlforge-api:latest backend
+   ```
+
+   Set `ENVIRONMENT=production`, `DEBUG=false`, a stable `JWT_SECRET` of at least 32
+   characters, `DATABASE_URL`, `SUPABASE_URL`, `CORS_ORIGINS` to the exact
+   frontend HTTPS origin, `HDL_WORKER_URL=http://10.10.0.5:8001`, and the same
+   `HDL_WORKER_TOKEN`. Set `HDL_USE_DOCKER=true` and keep the simulator and
+   resource-limit values consistent between the API and worker.
+
+4. Apply database migrations using the API image before starting the API:
+
+   ```bash
+   docker run --rm --env-file backend/.env hdlforge-api:latest alembic upgrade head
+   ```
+
+   Seed the initial problem catalog and learning content once after the
+   migration. These seed commands are idempotent:
+
+   ```bash
+   docker run --rm --env-file backend/.env hdlforge-api:latest python -m app.seed
+   docker run --rm --env-file backend/.env hdlforge-api:latest python -m app.seed_expand
+   docker run --rm --env-file backend/.env hdlforge-api:latest python -m app.seed_full_catalog
+   docker run --rm --env-file backend/.env hdlforge-api:latest python -m app.seed_learning
+   ```
+
+5. Configure Vercel with `NEXT_PUBLIC_API_URL` pointing to the public API URL,
+   `NEXT_PUBLIC_SUPABASE_URL`, and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (or
+   `NEXT_PUBLIC_SUPABASE_ANON_KEY`). Set `BACKEND_URL` to the public API URL for
+   the Next.js `/api/*` rewrite. Then run the build and lint checks before
+   promoting the deployment.
+
+6. Check `GET /api/ready` on the API and `GET /ready` from the private worker
+   network. Submit a known HDL solution and confirm it passes before opening
+   the frontend to users.
 
 ## API Endpoints
 
@@ -268,24 +315,15 @@ npm run build
 npm run lint
 ```
 
-## Phase 3 Status
+## Production notes
 
-This phase implements:
-
-- Real SystemVerilog execution via Verilator
-- Docker sandbox for isolated execution
-- Testbench protocol for structured results
-- Result parsing for test outcomes
-- Workspace management with cleanup
-- Timeout and resource limits
-- Compilation error reporting
-- Runtime error detection
-
-### Not Yet Implemented
-
-- Hidden testbench system
-- Authentication
-- User accounts
-- Leaderboards
-- AI assistance
-- Waveform visualization
+- Production auth uses Supabase. Local password routes are disabled when
+  `ENVIRONMENT=production`; do not expose the development auth flow.
+- Admin access comes from an explicitly configured `ADMIN_EMAILS` allowlist
+  for verified addresses or trusted Supabase `app_metadata.is_admin` claims.
+  User-editable metadata and usernames do not grant production admin access.
+- Production execution requires a private worker and hardened sandbox image.
+  `/api/ready` checks both PostgreSQL and the worker.
+- HDL run and submit calls require sign-in in production and are rate limited.
+- Run one API instance until a shared rate limiter is configured; the
+  per-minute limiter also tracks stored submissions in PostgreSQL.

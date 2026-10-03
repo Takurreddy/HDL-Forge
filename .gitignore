@@ -59,4 +59,4 @@ git-inspection.txt
 .env
 .env.local
 .env.production
-scratch/
+scratch/.npm-cache/

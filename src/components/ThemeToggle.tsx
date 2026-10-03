@@ -2,22 +2,9 @@
 
 import { useTheme } from "@/lib/theme";
 import { Sun, Moon } from "lucide-react";
-import { useEffect, useState } from "react";
 
 export default function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return (
-      <div className="h-8 w-8 rounded-xl border border-border/60 bg-surface/50" />
-    );
-  }
-
   const isDark = theme === "dark";
 
   return (

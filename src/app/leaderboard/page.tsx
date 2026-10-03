@@ -37,8 +37,12 @@ export default function LeaderboardPage() {
     }
   }, [user]);
 
-  useEffect(() => { void loadLeaderboard(); }, [loadLeaderboard]);
-  useEffect(() => { void loadMyRank(); }, [loadMyRank]);
+  useEffect(() => {
+    queueMicrotask(() => void loadLeaderboard());
+  }, [loadLeaderboard]);
+  useEffect(() => {
+    queueMicrotask(() => void loadMyRank());
+  }, [loadMyRank]);
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">

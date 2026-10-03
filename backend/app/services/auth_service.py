@@ -178,17 +178,13 @@ def get_user_by_username(db: Session, username: str) -> Profile | None:
 
 
 DEFAULT_ADMIN_ID = "00000000-0000-0000-0000-000000000001"
-DEFAULT_DEMO_ID = "00000000-0000-0000-0000-000000000002"
-
-_admin_hash = hash_password("admin123")
-_demo_hash = hash_password("password123")
 
 
 def get_user_from_token(db: Session, token: str) -> Profile | None:
     """Resolve a Bearer token to a Profile.
 
     1. Try Supabase JWT (ES256/RS256 via JWKS, or HS256 legacy).
-    2. Fall back to local HS256 JWT for the register/login flow.
+    2. Fall back to local HS256 JWT for the development register/login flow.
     Automatically provisions a profile in PostgreSQL if absent.
     """
     # 1. Try Supabase JWT
@@ -199,6 +195,12 @@ def get_user_from_token(db: Session, token: str) -> Profile | None:
             if user_id:
                 user = get_user_by_id(db, user_id)
                 if user:
+                    email = str(payload.get("email", "")).strip().lower()
+                    app_metadata = payload.get("app_metadata", {}) or {}
+                    verified_allowlisted = payload.get("email_verified") is True and email in settings.admin_emails_set
+                    if (app_metadata.get("is_admin") is True or verified_allowlisted) and not user.is_admin:
+                        user.is_admin = True
+                        db.commit()
                     return user
 
                 # Auto-provision profile from Supabase JWT
@@ -211,10 +213,9 @@ def get_user_from_token(db: Session, token: str) -> Profile | None:
 
                 display_name = meta.get("display_name") or meta.get("username") or uname
                 email_lower = email.lower() if email else ""
-                is_admin = bool(
-                    meta.get("is_admin", False)
-                    or (email_lower in settings.admin_emails_set)
-                    or (uname.lower() in settings.admin_usernames_set)
+                app_metadata = payload.get("app_metadata", {}) or {}
+                is_admin = app_metadata.get("is_admin") is True or (
+                    payload.get("email_verified") is True and email_lower in settings.admin_emails_set
                 )
 
                 new_user = Profile(
@@ -230,13 +231,17 @@ def get_user_from_token(db: Session, token: str) -> Profile | None:
         except Exception:
             pass
 
-    # 2. Try local JWT
+    # Production only accepts Supabase-issued access tokens.
+    if settings.ENVIRONMENT == "production":
+        return None
+
+    # 2. Try local JWT (development only)
     user_id = decode_access_token(token)
     if user_id:
         user = get_user_by_id(db, user_id)
         if user:
             return user
-        # Handle default admin or demo user
+        # The development bootstrap can create the local admin profile.
         if user_id == DEFAULT_ADMIN_ID:
             adm = Profile(
                 id=DEFAULT_ADMIN_ID,
@@ -248,29 +253,13 @@ def get_user_from_token(db: Session, token: str) -> Profile | None:
             db.commit()
             db.refresh(adm)
             return adm
-        elif user_id == DEFAULT_DEMO_ID:
-            demo = Profile(
-                id=DEFAULT_DEMO_ID,
-                username="demo",
-                display_name="Demo Engineer",
-                is_admin=False,
-            )
-            db.add(demo)
-            db.commit()
-            db.refresh(demo)
-            return demo
 
     return None
 
 
 # ── Local auth registry ──────────────────────────────────────────────────────
 
-_local_email_registry: dict[str, tuple[str, str]] = {
-    "admin@hdlforge.com": (DEFAULT_ADMIN_ID, _admin_hash),
-    "admin": (DEFAULT_ADMIN_ID, _admin_hash),
-    "bvsrujan@gmail.com": (DEFAULT_ADMIN_ID, _admin_hash),
-    "demo@hdlforge.dev": (DEFAULT_DEMO_ID, _demo_hash),
-}
+_local_email_registry: dict[str, tuple[str, str]] = {}
 _local_email_lock = threading.Lock()
 
 
@@ -312,44 +301,9 @@ def create_user(
 
 def authenticate_user(db: Session, email: str, password: str) -> Profile | None:
     """Authenticate via password hash and ensure profile exists in DB."""
+    if settings.ENVIRONMENT == "production":
+        return None
     email_clean = email.strip().lower()
-
-    # Special handling for default admin credentials
-    if email_clean in ("admin@hdlforge.com", "admin", "bvsrujan@gmail.com"):
-        if password in ("admin123", "password123", "admin"):
-            admin_user = get_user_by_id(db, DEFAULT_ADMIN_ID)
-            if not admin_user:
-                admin_user = db.query(Profile).filter(Profile.username == "admin").first()
-            if not admin_user:
-                admin_user = Profile(
-                    id=DEFAULT_ADMIN_ID,
-                    username="admin",
-                    display_name="System Administrator",
-                    is_admin=True,
-                )
-                db.add(admin_user)
-                db.commit()
-                db.refresh(admin_user)
-            else:
-                admin_user.is_admin = True
-                db.commit()
-            return admin_user
-
-    # Special handling for demo credentials
-    if email_clean in ("demo@hdlforge.dev", "demo"):
-        if password in ("password123", "demo"):
-            demo_user = get_user_by_id(db, DEFAULT_DEMO_ID)
-            if not demo_user:
-                demo_user = Profile(
-                    id=DEFAULT_DEMO_ID,
-                    username="demo",
-                    display_name="Demo Engineer",
-                    is_admin=False,
-                )
-                db.add(demo_user)
-                db.commit()
-                db.refresh(demo_user)
-            return demo_user
 
     with _local_email_lock:
         entry = _local_email_registry.get(email_clean)

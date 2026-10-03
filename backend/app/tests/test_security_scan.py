@@ -13,7 +13,7 @@ import pytest
 BACKEND_ROOT = Path(__file__).parent.parent.parent  # backend/
 REPO_ROOT = BACKEND_ROOT.parent
 
-EXCLUDE_DIRS = {".git", "__pycache__", "node_modules", ".next", "alembic", "venv", ".venv"}
+EXCLUDE_DIRS = {".git", ".kilo", "__pycache__", "node_modules", ".next", "alembic", "venv", ".venv"}
 THIS_FILE = Path(__file__).resolve()
 
 

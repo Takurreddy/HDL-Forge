@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth";
+import { Difficulty } from "@/lib/types";
 import {
   fetchAdminStats,
   fetchAdminProblems,
@@ -55,8 +56,8 @@ function AdminPortalContent() {
   const [activeTab, setActiveTab] = useState<"overview" | "problems" | "submissions" | "users">("overview");
 
   // Inline Admin Login State
-  const [inlineEmail, setInlineEmail] = useState("admin@hdlforge.com");
-  const [inlinePassword, setInlinePassword] = useState("admin123");
+  const [inlineEmail, setInlineEmail] = useState("");
+  const [inlinePassword, setInlinePassword] = useState("");
   const [inlineLoading, setInlineLoading] = useState(false);
   const [inlineError, setInlineError] = useState("");
 
@@ -95,8 +96,8 @@ function AdminPortalContent() {
       if (pData.status === "fulfilled") setProblems(pData.value);
       if (subData.status === "fulfilled") setSubmissions(subData.value);
       if (uData.status === "fulfilled") setUsers(uData.value);
-    } catch (err: any) {
-      setError(err?.message || "Failed to load admin telemetry.");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to load admin telemetry.");
     } finally {
       setLoading(false);
     }
@@ -104,19 +105,21 @@ function AdminPortalContent() {
 
   useEffect(() => {
     if (!authLoading) {
-      loadData();
+      queueMicrotask(() => void loadData());
     }
   }, [authLoading, user]);
 
   useEffect(() => {
-    if (searchParams.get("create") === "true") {
-      setShowCreateModal(true);
-      setActiveTab("problems");
-    }
-    const tab = searchParams.get("tab");
-    if (tab === "problems" || tab === "submissions" || tab === "users" || tab === "overview") {
-      setActiveTab(tab);
-    }
+    queueMicrotask(() => {
+      if (searchParams.get("create") === "true") {
+        setShowCreateModal(true);
+        setActiveTab("problems");
+      }
+      const tab = searchParams.get("tab");
+      if (tab === "problems" || tab === "submissions" || tab === "users" || tab === "overview") {
+        setActiveTab(tab);
+      }
+    });
   }, [searchParams]);
 
   const handleInlineAdminLogin = async (e?: React.FormEvent) => {
@@ -126,8 +129,8 @@ function AdminPortalContent() {
     try {
       await login(inlineEmail, inlinePassword);
       await loadData();
-    } catch (err: any) {
-      setInlineError(err?.message || "Admin login failed.");
+    } catch (err: unknown) {
+      setInlineError(err instanceof Error ? err.message : "Admin login failed.");
     } finally {
       setInlineLoading(false);
     }
@@ -152,8 +155,8 @@ function AdminPortalContent() {
         company_tags: "Intel, NVIDIA",
       });
       await loadData();
-    } catch (err: any) {
-      alert("Failed to create problem: " + (err?.message || err));
+    } catch (err: unknown) {
+      alert("Failed to create problem: " + (err instanceof Error ? err.message : String(err)));
     } finally {
       setCreating(false);
     }
@@ -163,8 +166,8 @@ function AdminPortalContent() {
     try {
       await toggleUserAdmin(userId);
       await loadData();
-    } catch (err: any) {
-      alert("Failed to toggle admin status: " + (err?.message || err));
+    } catch (err: unknown) {
+      alert("Failed to toggle admin status: " + (err instanceof Error ? err.message : String(err)));
     }
   };
 
@@ -448,7 +451,9 @@ function AdminPortalContent() {
               ONLINE
             </span>
             <span className="text-xs font-mono text-text-dim">
-              {stats?.systemHealth?.simulator?.toUpperCase() || "ICARUS"}
+              {typeof stats?.systemHealth?.simulator === "string"
+                ? stats.systemHealth.simulator.toUpperCase()
+                : "ICARUS"}
             </span>
           </div>
           <p className="mt-1 text-[11px] text-text-dim">
@@ -636,7 +641,7 @@ function AdminPortalContent() {
                       <td className="py-3 px-4 text-text-secondary">{prob.category}</td>
                       <td className="py-3 px-4">
                         <DifficultyBadge
-                          difficulty={prob.difficulty.toLowerCase() as any}
+                          difficulty={prob.difficulty.toLowerCase() as Difficulty}
                           size="sm"
                         />
                       </td>

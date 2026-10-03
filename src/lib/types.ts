@@ -155,7 +155,7 @@ export interface DashboardLearningProgress {
   progressPercent: number;
   conceptsMastered: number;
   conceptsInProgress: number;
-  recentLessons: { slug: string; title: string; completedAt: string }[];
+  recentLessons: { slug: string; title: string; completedAt: string | null }[];
 }
 
 export interface DashboardSubmission {
