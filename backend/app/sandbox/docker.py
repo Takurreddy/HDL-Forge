@@ -2,6 +2,7 @@ import logging
 import subprocess
 from pathlib import Path
 
+from app.core.config import settings
 from app.execution.limits import ExecutionLimits
 from app.execution.workspace import ExecutionWorkspace
 from app.simulator.base import SimulationResult, SimulationStatus
@@ -9,7 +10,7 @@ from app.simulator.result_parser import ResultParser
 
 logger = logging.getLogger(__name__)
 
-DOCKER_IMAGE = "hdlforge-sandbox:latest"
+DOCKER_IMAGE = settings.HDL_SANDBOX_IMAGE
 
 
 class DockerSandbox:
@@ -26,8 +27,11 @@ class DockerSandbox:
         try:
             return self._run_in_container(workspace, limits)
         except FileNotFoundError:
-            logger.warning("Docker not found, falling back to direct execution")
-            return self._fallback_direct(workspace, limits)
+            logger.exception("Docker is unavailable; refusing unsandboxed HDL execution")
+            return SimulationResult(
+                status=SimulationStatus.SYSTEM_ERROR,
+                message="Sandbox unavailable; HDL was not executed.",
+            )
         except Exception as e:
             logger.error("Sandbox execution failed: %s", e)
             return SimulationResult(
@@ -59,6 +63,10 @@ class DockerSandbox:
                 "/workspace/testbench.sv /workspace/submission.sv /workspace/sim_main.cpp "
                 "&& /workspace/obj_dir/Vtestbench"
             )
+        guarded_sim_cmd = (
+            "while [ ! -f /workspace/.hdlforge-ready ]; do sleep 0.1; done; "
+            f"{sim_cmd}"
+        )
 
         try:
             # Create container
@@ -66,26 +74,60 @@ class DockerSandbox:
                 "docker", "create",
                 "--name", container_name,
                 "--network", "none",
+                "--read-only",
                 "--tmpfs", "/tmp:rw,noexec,nosuid,size=64m",
-                "--cpus", "2.0",
+                "--tmpfs", f"/workspace:rw,noexec,nosuid,size=128m,uid=10001,gid=10001",
+                "--cpus", "1.0",
+                "--ulimit", f"cpu={limits.cpu_seconds}:{limits.cpu_seconds}",
                 "--memory", f"{limits.memory_mb}m",
                 "--pids-limit", str(limits.process_limit),
                 "--security-opt", "no-new-privileges",
                 "--cap-drop", "ALL",
+                "--user", "10001:10001",
+                "--log-driver", "local",
+                "--log-opt", f"max-size={max(1024, limits.max_output_size)}",
+                "--log-opt", "max-file=2",
                 "-w", "/workspace",
                 DOCKER_IMAGE,
                 "bash", "-c",
-                sim_cmd,
+                guarded_sim_cmd,
             ]
-            subprocess.run(create_cmd, capture_output=True, text=True, timeout=10)
+            create_result = subprocess.run(create_cmd, capture_output=True, text=True, timeout=10)
+            if create_result.returncode != 0:
+                return SimulationResult(
+                    status=SimulationStatus.SYSTEM_ERROR,
+                    message="Sandbox container could not be created.",
+                    compilation_output=self._sanitize(create_result.stderr),
+                )
 
-            # Copy files into container
+            # Start first so Docker mounts the writable workspace tmpfs before
+            # source files are streamed through `docker exec`.
+            start_result = subprocess.run(
+                ["docker", "start", container_name],
+                capture_output=True, text=True, timeout=10,
+            )
+            if start_result.returncode != 0:
+                logger.error("Sandbox container failed to start: %s", self._sanitize(start_result.stderr))
+                return SimulationResult(
+                    status=SimulationStatus.SYSTEM_ERROR,
+                    message="Sandbox container could not be started.",
+                )
+
+            # `docker cp` writes through the container rootfs on some engines,
+            # which rejects writes when the rootfs is read-only even for tmpfs
+            # mounts. Stream the source through the running container instead.
             for fname in ["submission.sv", "testbench.sv"]:
                 src = workspace_path / fname
-                subprocess.run(
-                    ["docker", "cp", str(src), f"{container_name}:/workspace/{fname}"],
-                    capture_output=True, text=True, timeout=10,
+                copy_result = subprocess.run(
+                    ["docker", "exec", "-i", container_name, "sh", "-c", f"cat > /workspace/{fname}"],
+                    input=src.read_bytes(), capture_output=True, timeout=10,
                 )
+                if copy_result.returncode != 0:
+                    logger.error("Sandbox source staging failed: %s", self._sanitize(copy_result.stderr.decode(errors="replace")))
+                    return SimulationResult(
+                        status=SimulationStatus.SYSTEM_ERROR,
+                        message="Sandbox source could not be staged.",
+                    )
 
             if settings.SIMULATOR.lower() != "icarus":
                 # Write sim_main.cpp for Verilator (must advance time for # delays)
@@ -106,16 +148,26 @@ class DockerSandbox:
                     '    return 0;\n'
                     '}\n'
                 )
-                subprocess.run(
-                    ["docker", "cp", str(sim_main), f"{container_name}:/workspace/sim_main.cpp"],
-                    capture_output=True, text=True, timeout=10,
+                copy_result = subprocess.run(
+                    ["docker", "exec", "-i", container_name, "sh", "-c", "cat > /workspace/sim_main.cpp"],
+                    input=sim_main.read_bytes(), capture_output=True, timeout=10,
                 )
+                if copy_result.returncode != 0:
+                    logger.error("Sandbox simulator staging failed: %s", self._sanitize(copy_result.stderr.decode(errors="replace")))
+                    return SimulationResult(
+                        status=SimulationStatus.SYSTEM_ERROR,
+                        message="Sandbox simulator could not be staged.",
+                    )
 
-            # Start container
-            subprocess.run(
-                ["docker", "start", container_name],
+            release_result = subprocess.run(
+                ["docker", "exec", container_name, "touch", "/workspace/.hdlforge-ready"],
                 capture_output=True, text=True, timeout=10,
             )
+            if release_result.returncode != 0:
+                return SimulationResult(
+                    status=SimulationStatus.SYSTEM_ERROR,
+                    message="Sandbox execution could not be released.",
+                )
 
             # Wait for completion
             try:
@@ -171,29 +223,6 @@ class DockerSandbox:
                 ["docker", "rm", "-f", container_name],
                 capture_output=True, text=True, timeout=5,
             )
-
-    def _fallback_direct(
-        self,
-        workspace: ExecutionWorkspace,
-        limits: ExecutionLimits,
-    ) -> SimulationResult:
-        from app.core.config import settings
-        from app.simulator import get_simulator
-
-        simulator = get_simulator(settings.SIMULATOR, workspace=workspace, limits=limits)
-        compile_result = simulator.compile(
-            submission_path=workspace.workspace_path / "submission.sv",
-            testbench_path=workspace.workspace_path / "testbench.sv",
-        )
-        if compile_result.status != SimulationStatus.COMPILATION_OK:
-            return compile_result
-
-        binary_path = (
-            workspace.workspace_path / "simulation.out"
-            if settings.SIMULATOR.lower() == "icarus"
-            else workspace.workspace_path / "obj_dir" / "Vtestbench"
-        )
-        return simulator.simulate(binary_path=binary_path)
 
     def _sanitize(self, output: str) -> str:
         lines = output.split("\n")

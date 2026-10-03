@@ -65,7 +65,9 @@ export default function LessonPage({
     }
   }, [lessonSlug, user]);
 
-  useEffect(() => { void loadLesson(); }, [loadLesson]);
+  useEffect(() => {
+    queueMicrotask(() => void loadLesson());
+  }, [loadLesson]);
 
   const loadQuiz = useCallback(async () => {
     if (!lesson) return;

@@ -5,6 +5,7 @@ from app.db.database import get_db
 from app.db.models import Profile
 from app.schemas.auth import AuthResponse, LoginRequest, RegisterRequest, UserResponse
 from app.services import auth_service
+from app.core.config import settings
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -44,10 +45,13 @@ def require_user(
 
 
 def check_is_admin(user: Profile) -> bool:
-    from app.core.config import settings
     return bool(
         getattr(user, "is_admin", False)
-        or (user.username and user.username.lower() in settings.admin_usernames_set)
+        or (
+            settings.ENVIRONMENT != "production"
+            and user.username
+            and user.username.lower() in settings.admin_usernames_set
+        )
     )
 
 
@@ -72,6 +76,8 @@ def _user_response(user: Profile) -> UserResponse:
 @router.post("/register", response_model=AuthResponse)
 def register(request: RegisterRequest, response: Response, db: Session = Depends(get_db)):
     """Local register — used only in unit tests with in-memory SQLite DB."""
+    if settings.ENVIRONMENT == "production":
+        raise HTTPException(status_code=404, detail="Use the configured identity provider to register.")
     if auth_service.get_user_by_email(db, request.email):
         raise HTTPException(status_code=409, detail="Email already registered")
     if auth_service.get_user_by_username(db, request.username):
@@ -98,6 +104,8 @@ def register(request: RegisterRequest, response: Response, db: Session = Depends
 @router.post("/login", response_model=AuthResponse)
 def login(request: LoginRequest, response: Response, db: Session = Depends(get_db)):
     """Local login — used only in unit tests with in-memory SQLite DB."""
+    if settings.ENVIRONMENT == "production":
+        raise HTTPException(status_code=404, detail="Use the configured identity provider to sign in.")
     user = auth_service.authenticate_user(db, request.email, request.password)
     if not user:
         raise HTTPException(status_code=401, detail="Invalid email or password")

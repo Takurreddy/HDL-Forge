@@ -40,7 +40,9 @@ export default function PathPage({
     }
   }, [pathSlug]);
 
-  useEffect(() => { void loadPath(); }, [loadPath]);
+  useEffect(() => {
+    queueMicrotask(() => void loadPath());
+  }, [loadPath]);
 
   if (loading) {
     return (

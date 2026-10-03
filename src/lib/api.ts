@@ -804,7 +804,6 @@ endmodule`,
 
 endmodule`,
   },
-<<<<<<< HEAD
   {
     id: "22",
     slug: "decoder-3to8",
@@ -1525,8 +1524,6 @@ endmodule`,
 
 endmodule`,
   },
-=======
->>>>>>> friend/Bvs_SubBranch
 ];
 
 export async function fetchProblems(params?: {
@@ -1548,7 +1545,6 @@ export async function fetchProblems(params?: {
   const qs = searchParams.toString();
   const path = `/api/problems${qs ? `?${qs}` : ""}`;
 
-<<<<<<< HEAD
   // 1. Prioritize backend database API (single source of truth with 50 problems + custom added)
   try {
     const data = await apiFetch<ApiProblemListResponse>(path);
@@ -1566,16 +1562,6 @@ export async function fetchProblems(params?: {
   if (supabaseRes && supabaseRes.problems.length > 0) return supabaseRes;
 
   let filtered = [...MOCK_PROBLEMS];
-=======
-  try {
-    const data = await apiFetch<ApiProblemListResponse>(path);
-    return {
-      problems: data.problems.map(transformProblem),
-      total: data.total,
-    };
-  } catch {
-    let filtered = [...MOCK_PROBLEMS];
->>>>>>> friend/Bvs_SubBranch
     if (params?.difficulty && params.difficulty !== "all") {
       filtered = filtered.filter(
         (p) => p.difficulty.toLowerCase() === params.difficulty?.toLowerCase()
@@ -1601,10 +1587,6 @@ export async function fetchProblems(params?: {
       problems: filtered,
       total: filtered.length,
     };
-<<<<<<< HEAD
-=======
-  }
->>>>>>> friend/Bvs_SubBranch
 }
 
 export async function fetchProblemBySlug(slug: string): Promise<Problem> {
@@ -2582,7 +2564,6 @@ export async function fetchContests(): Promise<Contest[]> {
   }
 }
 
-<<<<<<< HEAD
 export async function fetchContestById(id: string): Promise<Contest | null> {
   try {
     const data = await apiFetch<Contest>(`/api/contests/${id}`);
@@ -2593,9 +2574,30 @@ export async function fetchContestById(id: string): Promise<Contest | null> {
   }
 }
 
+interface DashboardApiResponse {
+  problems_solved?: number;
+  problems_attempted?: number;
+  current_streak?: number;
+  xp?: number;
+  level?: number;
+  xp_in_current_level?: number;
+  xp_for_next?: number;
+  rank?: number;
+  total_submissions?: number;
+  success_rate?: number;
+  difficulty_stats?: Array<{ difficulty: string; solved?: number; total?: number; xp?: number }>;
+  recent_submissions?: Array<{ id: number; problem_slug: string; problem_title: string; difficulty: string; score: number; status: string; created_at: string }>;
+  category_progress?: Array<{ category: string; solved?: number; total?: number }>;
+  language_progress?: Array<{ language: string; solved?: number; total?: number }>;
+  problem_progress?: Array<{ problem_id: number; slug: string; title: string; difficulty: string; status: string; best_score?: number; attempts?: number }>;
+  recent_achievements?: Array<{ slug: string; name: string; description: string; icon: string; xp_reward: number; unlocked_at: string }>;
+  personal_bests?: { best_score?: number; fastest_accepted?: number | null; most_difficult?: string | null; longest_streak?: number };
+  learning_progress?: { total_lessons?: number; completed_lessons?: number; in_progress_lessons?: number; progress_percent?: number; concepts_mastered?: number; concepts_in_progress?: number; recent_lessons?: Array<{ slug: string; title: string; completed_at: string | null }> };
+}
+
 export async function fetchUserDashboard(): Promise<import("./types").DashboardData | null> {
   try {
-    const data = await apiFetch<any>("/api/me/dashboard", { credentials: "include" });
+    const data = await apiFetch<DashboardApiResponse>("/api/me/dashboard", { credentials: "include" });
     return {
       problemsSolved: data.problems_solved ?? 0,
       problemsAttempted: data.problems_attempted ?? 0,
@@ -2607,13 +2609,13 @@ export async function fetchUserDashboard(): Promise<import("./types").DashboardD
       rank: data.rank ?? 0,
       totalSubmissions: data.total_submissions ?? 0,
       successRate: data.success_rate ?? 0,
-      difficultyStats: (data.difficulty_stats || []).map((d: any) => ({
+      difficultyStats: (data.difficulty_stats || []).map((d) => ({
         difficulty: d.difficulty,
         solved: d.solved ?? 0,
         total: d.total ?? 0,
         xp: d.xp ?? 0,
       })),
-      recentSubmissions: (data.recent_submissions || []).map((s: any) => ({
+      recentSubmissions: (data.recent_submissions || []).map((s) => ({
         id: s.id,
         problemSlug: s.problem_slug,
         problemTitle: s.problem_title,
@@ -2622,17 +2624,17 @@ export async function fetchUserDashboard(): Promise<import("./types").DashboardD
         status: s.status,
         createdAt: s.created_at,
       })),
-      categoryProgress: (data.category_progress || []).map((c: any) => ({
+      categoryProgress: (data.category_progress || []).map((c) => ({
         category: c.category,
         solved: c.solved ?? 0,
         total: c.total ?? 0,
       })),
-      languageProgress: (data.language_progress || []).map((l: any) => ({
+      languageProgress: (data.language_progress || []).map((l) => ({
         language: l.language,
         solved: l.solved ?? 0,
         total: l.total ?? 0,
       })),
-      problemProgress: (data.problem_progress || []).map((p: any) => ({
+      problemProgress: (data.problem_progress || []).map((p) => ({
         problemId: p.problem_id,
         slug: p.slug,
         title: p.title,
@@ -2641,7 +2643,7 @@ export async function fetchUserDashboard(): Promise<import("./types").DashboardD
         bestScore: p.best_score ?? 0,
         attempts: p.attempts ?? 0,
       })),
-      recentAchievements: (data.recent_achievements || []).map((a: any) => ({
+      recentAchievements: (data.recent_achievements || []).map((a) => ({
         slug: a.slug,
         name: a.name,
         description: a.description,
@@ -2662,7 +2664,7 @@ export async function fetchUserDashboard(): Promise<import("./types").DashboardD
         progressPercent: data.learning_progress?.progress_percent || 0,
         conceptsMastered: data.learning_progress?.concepts_mastered || 0,
         conceptsInProgress: data.learning_progress?.concepts_in_progress || 0,
-        recentLessons: (data.learning_progress?.recent_lessons || []).map((l: any) => ({
+        recentLessons: (data.learning_progress?.recent_lessons || []).map((l) => ({
           slug: l.slug,
           title: l.title,
           completedAt: l.completed_at,
@@ -2681,7 +2683,7 @@ export interface AdminStats {
   passedSubmissions: number;
   passRate: number;
   categories: Record<string, number>;
-  systemHealth: Record<string, any>;
+  systemHealth: Record<string, unknown>;
 }
 
 export interface AdminProblem {
@@ -2729,8 +2731,18 @@ export interface AdminUser {
   lastLoginAt: string | null;
 }
 
+interface AdminStatsApiResponse {
+  total_users?: number;
+  total_problems?: number;
+  total_submissions?: number;
+  passed_submissions?: number;
+  pass_rate?: number;
+  categories?: Record<string, number>;
+  system_health?: Record<string, unknown>;
+}
+
 export async function fetchAdminStats(): Promise<AdminStats> {
-  const data = await apiFetch<any>("/api/admin/stats", { credentials: "include" });
+  const data = await apiFetch<AdminStatsApiResponse>("/api/admin/stats", { credentials: "include" });
   return {
     totalUsers: data.total_users ?? 0,
     totalProblems: data.total_problems ?? 0,
@@ -2742,8 +2754,14 @@ export async function fetchAdminStats(): Promise<AdminStats> {
   };
 }
 
+interface AdminProblemApi {
+  id: number; slug: string; title: string; difficulty: string; category: string;
+  language: string; time_limit: number; memory_limit: number; company_tags?: string | null;
+  test_cases_count?: number; submissions_count?: number; created_at: string; updated_at: string;
+}
+
 export async function fetchAdminProblems(): Promise<AdminProblem[]> {
-  const data = await apiFetch<any[]>("/api/admin/problems", { credentials: "include" });
+  const data = await apiFetch<AdminProblemApi[]>("/api/admin/problems", { credentials: "include" });
   return (data || []).map((p) => ({
     id: p.id,
     slug: p.slug,
@@ -2771,7 +2789,7 @@ export async function createAdminProblem(problem: {
   starter_code?: string;
   testbench?: string;
   company_tags?: string;
-}): Promise<any> {
+}): Promise<unknown> {
   const payload = {
     ...problem,
     difficulty: (problem.difficulty || "EASY").toUpperCase(),
@@ -2784,8 +2802,14 @@ export async function createAdminProblem(problem: {
   });
 }
 
+interface AdminSubmissionApi {
+  id: number; problem_slug: string; problem_title: string; user_id: string | null;
+  username: string | null; status: string; score: number; tests_passed: number;
+  tests_total: number; execution_time: number; language: string; created_at: string;
+}
+
 export async function fetchAdminSubmissions(limit = 50): Promise<AdminSubmission[]> {
-  const data = await apiFetch<any[]>(`/api/admin/submissions?limit=${limit}`, { credentials: "include" });
+  const data = await apiFetch<AdminSubmissionApi[]>(`/api/admin/submissions?limit=${limit}`, { credentials: "include" });
   return (data || []).map((s) => ({
     id: s.id,
     problemSlug: s.problem_slug,
@@ -2802,8 +2826,14 @@ export async function fetchAdminSubmissions(limit = 50): Promise<AdminSubmission
   }));
 }
 
+interface AdminUserApi {
+  id: string; username: string; display_name: string | null; avatar_url: string | null;
+  xp: number; level: number; solved_count: number; total_submissions: number;
+  is_admin: boolean; created_at: string; last_login_at: string | null;
+}
+
 export async function fetchAdminUsers(limit = 50): Promise<AdminUser[]> {
-  const data = await apiFetch<any[]>(`/api/admin/users?limit=${limit}`, { credentials: "include" });
+  const data = await apiFetch<AdminUserApi[]>(`/api/admin/users?limit=${limit}`, { credentials: "include" });
   return (data || []).map((u) => ({
     id: u.id,
     username: u.username,
@@ -2819,14 +2849,9 @@ export async function fetchAdminUsers(limit = 50): Promise<AdminUser[]> {
   }));
 }
 
-export async function toggleUserAdmin(userId: string): Promise<any> {
+export async function toggleUserAdmin(userId: string): Promise<unknown> {
   return apiFetch(`/api/admin/users/${userId}/toggle-admin`, {
     method: "POST",
     credentials: "include",
   });
 }
-
-
-
-=======
->>>>>>> friend/Bvs_SubBranch

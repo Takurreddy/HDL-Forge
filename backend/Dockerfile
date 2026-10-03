@@ -1,23 +1,16 @@
 FROM python:3.11-slim
 
-# Install HDL toolchain used by direct execution on Render.
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    iverilog \
-    verilator \
-    gcc \
-    g++ \
-    make \
-    libffi-dev \
-    && rm -rf /var/lib/apt/lists/*
+RUN groupadd --gid 10001 hdlforge \
+    && useradd --uid 10001 --gid 10001 --create-home hdlforge
 
 WORKDIR /app
-
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
+COPY app ./app
+COPY alembic ./alembic
+COPY alembic.ini ./
 
-COPY . /app
-
-ENV PYTHONUNBUFFERED=1
-
-# Render supplies PORT at runtime.
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-10000}"]
+ENV PYTHONUNBUFFERED=1 ENVIRONMENT=production
+USER 10001:10001
+EXPOSE 8000
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

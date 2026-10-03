@@ -27,6 +27,7 @@ from app.core.config import settings
 from app.db.database import Base, get_db
 from app.db.models import Difficulty, Language, Problem, Profile
 from app.main import app
+from app.services import auth_service
 from app.services.auth_service import create_access_token, hash_password
 
 
@@ -100,6 +101,57 @@ def _make_problem(db_session):
     db_session.add(p)
     db_session.commit()
     return p
+
+
+def test_production_rejects_local_password_and_jwt_auth(db_session, monkeypatch):
+    monkeypatch.setattr(settings, "ENVIRONMENT", "production")
+    monkeypatch.setattr(settings, "SUPABASE_URL", "")
+    assert auth_service.authenticate_user(db_session, "admin@hdlforge.com", "admin123") is None
+    assert auth_service.get_user_from_token(
+        db_session,
+        create_access_token("00000000-0000-0000-0000-000000000001"),
+    ) is None
+
+
+def test_user_editable_supabase_metadata_cannot_grant_admin(db_session, monkeypatch):
+    user_id = "cbcff8dc-43aa-4a61-9c41-c389d08795f4"
+    monkeypatch.setattr(settings, "ENVIRONMENT", "development")
+    monkeypatch.setattr(settings, "SUPABASE_URL", "https://auth.example.test")
+    monkeypatch.setattr(settings, "ADMIN_EMAILS", "owner@example.test")
+    monkeypatch.setattr(
+        auth_service,
+        "verify_supabase_jwt_payload",
+        lambda _token: {
+            "sub": user_id,
+            "email": "owner@example.test",
+            "email_verified": False,
+            "user_metadata": {"username": "owner", "is_admin": True},
+        },
+    )
+
+    user = auth_service.get_user_from_token(db_session, "valid-signed-token")
+    assert user is not None
+    assert user.is_admin is False
+
+
+def test_trusted_supabase_app_metadata_can_grant_admin(db_session, monkeypatch):
+    user_id = "cbcff8dc-43aa-4a61-9c41-c389d08795f5"
+    monkeypatch.setattr(settings, "ENVIRONMENT", "development")
+    monkeypatch.setattr(settings, "SUPABASE_URL", "https://auth.example.test")
+    monkeypatch.setattr(
+        auth_service,
+        "verify_supabase_jwt_payload",
+        lambda _token: {
+            "sub": user_id,
+            "email": "engineer@example.test",
+            "user_metadata": {"username": "engineer"},
+            "app_metadata": {"is_admin": True},
+        },
+    )
+
+    user = auth_service.get_user_from_token(db_session, "valid-signed-token")
+    assert user is not None
+    assert user.is_admin is True
 
 
 # ---------------------------------------------------------------------------

@@ -24,7 +24,9 @@ export default function AchievementsPage() {
     }
   }, [user]);
 
-  useEffect(() => { void loadAchievements(); }, [loadAchievements]);
+  useEffect(() => {
+    queueMicrotask(() => void loadAchievements());
+  }, [loadAchievements]);
 
   if (!user) {
     return (

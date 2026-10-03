@@ -29,8 +29,12 @@ class ExecutionRunner:
     def __init__(self, use_docker: bool | None = None) -> None:
         if use_docker is None:
             use_docker = getattr(settings, "HDL_USE_DOCKER", True)
-        self.use_docker = bool(use_docker and self._is_docker_daemon_running())
-        self.sandbox = DockerSandbox() if self.use_docker else None
+        self.use_docker = bool(use_docker)
+        self.sandbox = (
+            DockerSandbox()
+            if self.use_docker and not settings.HDL_WORKER_URL and self._is_docker_daemon_running()
+            else None
+        )
 
     @staticmethod
     def _is_docker_daemon_running() -> bool:
@@ -47,6 +51,9 @@ class ExecutionRunner:
     def execute(self, job: ExecutionJob) -> SubmissionResponse:
         start_time = time.time()
 
+        if self.use_docker and settings.HDL_WORKER_URL:
+            return self._execute_remote(job, start_time)
+
         with ExecutionWorkspace() as workspace:
             workspace.write_submission(job.code)
 
@@ -61,16 +68,14 @@ class ExecutionRunner:
                 settings.SIMULATOR, workspace=workspace, limits=job.limits
             )
 
-            if self.use_docker and self.sandbox is not None:
+            if self.use_docker and self.sandbox is None:
+                result = SimulationResult(
+                    status=SimulationStatus.SYSTEM_ERROR,
+                    message="Sandbox unavailable; HDL was not executed.",
+                )
+            elif self.use_docker:
+                assert self.sandbox is not None
                 result = self._execute_in_sandbox(workspace, job, simulator)
-                if result.status == SimulationStatus.SYSTEM_ERROR and "Sandbox" in result.message:
-                    logger.warning(
-                        "Sandbox failed (%s), falling back to direct execution",
-                        result.message,
-                    )
-                    result = self._execute_direct(
-                        workspace, job, simulator, job.waveform_enabled
-                    )
             else:
                 result = self._execute_direct(
                     workspace, job, simulator, job.waveform_enabled
@@ -88,6 +93,34 @@ class ExecutionRunner:
             )
 
             return self._build_response(result, elapsed)
+
+    def _execute_remote(self, job: ExecutionJob, start_time: float) -> SubmissionResponse:
+        import httpx
+
+        url = f"{settings.HDL_WORKER_URL.rstrip('/')}/execute"
+        payload = {
+            "problem_slug": job.problem_slug,
+            "code": job.code,
+            "testbench_code": job.testbench_code,
+            "module_name": job.module_name,
+            "waveform_enabled": job.waveform_enabled,
+        }
+        try:
+            with httpx.Client(trust_env=False, timeout=job.limits.timeout_seconds + 30) as client:
+                response = client.post(
+                    url,
+                    json=payload,
+                    headers={"Authorization": f"Bearer {settings.HDL_WORKER_TOKEN}"},
+                )
+            response.raise_for_status()
+            return SubmissionResponse.model_validate(response.json())
+        except (httpx.HTTPError, ValueError) as exc:
+            logger.error("Private HDL worker request failed: %s", type(exc).__name__)
+            return SubmissionResponse(
+                status="SYSTEM_ERROR",
+                message="HDL execution worker is unavailable.",
+                execution_time=time.time() - start_time,
+            )
 
     def _inject_vcd_dump(self, testbench_code: str) -> str:
         vcd_lines = (

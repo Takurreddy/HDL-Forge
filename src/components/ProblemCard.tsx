@@ -11,7 +11,6 @@ interface ProblemCardProps {
   isSolved?: boolean;
 }
 
-<<<<<<< HEAD
 // Brand accent colors for hardware companies with crisp light mode contrast
 const COMPANY_STYLES: Record<string, { bg: string; text: string; border: string }> = {
   nvidia: { bg: "bg-emerald-600/10 dark:bg-[#76B900]/10", text: "text-emerald-700 dark:text-[#76B900]", border: "border-emerald-500/25 dark:border-[#76B900]/30" },
@@ -21,17 +20,6 @@ const COMPANY_STYLES: Record<string, { bg: string; text: string; border: string 
   amd: { bg: "bg-rose-600/10 dark:bg-[#ED1C24]/10", text: "text-rose-700 dark:text-[#FF4A50]", border: "border-rose-500/25 dark:border-[#ED1C24]/30" },
   google: { bg: "bg-blue-600/10 dark:bg-[#4285F4]/15", text: "text-blue-700 dark:text-[#4285F4]", border: "border-blue-500/25 dark:border-[#4285F4]/35" },
   arm: { bg: "bg-sky-600/10 dark:bg-[#0091BD]/15", text: "text-sky-700 dark:text-[#00C2FF]", border: "border-sky-500/25 dark:border-[#0091BD]/40" },
-=======
-// Brand accent colors for hardware companies
-const COMPANY_STYLES: Record<string, { bg: string; text: string; border: string }> = {
-  nvidia: { bg: "bg-[#76B900]/10", text: "text-[#76B900]", border: "border-[#76B900]/30" },
-  apple: { bg: "bg-zinc-200/10", text: "text-zinc-200", border: "border-zinc-300/30" },
-  intel: { bg: "bg-[#0071C5]/15", text: "text-[#00A3FF]", border: "border-[#0071C5]/40" },
-  qualcomm: { bg: "bg-[#3253DC]/15", text: "text-[#6080FF]", border: "border-[#3253DC]/40" },
-  amd: { bg: "bg-[#ED1C24]/10", text: "text-[#FF4A50]", border: "border-[#ED1C24]/30" },
-  google: { bg: "bg-[#4285F4]/15", text: "text-[#4285F4]", border: "border-[#4285F4]/35" },
-  arm: { bg: "bg-[#0091BD]/15", text: "text-[#00C2FF]", border: "border-[#0091BD]/40" },
->>>>>>> friend/Bvs_SubBranch
 };
 
 export default function ProblemCard({ problem, isSolved = false }: ProblemCardProps) {
@@ -42,11 +30,7 @@ export default function ProblemCard({ problem, isSolved = false }: ProblemCardPr
   return (
     <Link
       href={problem.locked ? "#" : `/problems/${problem.slug}`}
-<<<<<<< HEAD
       className={`group relative block rounded-2xl border border-border/80 bg-panel/90 p-4 sm:p-5 transition-all duration-300 hover:border-accent/50 hover:bg-surface/70 hover:shadow-md dark:hover:shadow-[0_4px_24px_rgba(0,0,0,0.4),0_0_24px_rgba(0,217,165,0.08)] ${
-=======
-      className={`group relative block rounded-2xl border border-border/80 bg-panel/90 p-4 sm:p-5 transition-all duration-300 hover:border-accent/50 hover:bg-surface/70 hover:shadow-[0_4px_24px_rgba(0,0,0,0.4),0_0_24px_rgba(0,217,165,0.08)] ${
->>>>>>> friend/Bvs_SubBranch
         problem.locked ? "opacity-60 cursor-not-allowed" : ""
       }`}
     >

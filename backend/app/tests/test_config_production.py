@@ -52,3 +52,36 @@ def test_postgres_parts_used_when_no_database_url():
         POSTGRES_DB="d",
     )
     assert s.get_database_url() == "postgresql://u:p@h:5432/d"
+
+
+def _production_settings(**overrides):
+    values = {
+        "ENVIRONMENT": "production",
+        "DEBUG": False,
+        "JWT_SECRET": "a" * 48,
+        "SUPABASE_URL": "https://project.supabase.co",
+        "ADMIN_EMAILS": "owner@example.test",
+        "HDL_USE_DOCKER": True,
+        "HDL_WORKER_URL": "http://10.10.0.5:8001",
+        "HDL_WORKER_TOKEN": "b" * 40,
+        "CORS_ORIGINS": "https://hdlforge.example",
+        "DATABASE_URL": "postgresql://user:password@db.example.test/hdlforge",
+    }
+    values.update(overrides)
+    return _fresh(**values)
+
+
+def test_complete_production_settings_are_accepted():
+    _production_settings().validate_production()
+
+
+def test_production_rejects_public_http_worker_url():
+    settings = _production_settings(HDL_WORKER_URL="http://worker.example.test:8001")
+    with pytest.raises(RuntimeError, match="private/internal HTTP"):
+        settings.validate_production()
+
+
+def test_production_requires_exact_explicit_https_origins():
+    settings = _production_settings(CORS_ORIGINS="https://hdlforge.example/path")
+    with pytest.raises(RuntimeError, match="exact HTTPS origins"):
+        settings.validate_production()

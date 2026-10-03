@@ -8,7 +8,7 @@ from app.services.judge_service import JudgeService
 
 logger = logging.getLogger(__name__)
 
-judge = JudgeService(runner=ExecutionRunner(use_docker=True))
+judge = JudgeService(runner=ExecutionRunner())
 
 
 def run_submission(
