@@ -5,22 +5,19 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from alembic import command
 from alembic.config import Config
-from sqlalchemy import text
+from sqlalchemy.exc import ProgrammingError
 from app.db.database import engine
 
 cfg = Config("alembic.ini")
 
-with engine.connect() as connection:
-    has_version = connection.execute(
-        text("SELECT to_regclass('public.alembic_version') IS NOT NULL")
-    ).scalar()
-    has_profiles = connection.execute(
-        text("SELECT to_regclass('public.profiles') IS NOT NULL")
-    ).scalar()
-
-if not has_version and has_profiles:
-    # Production was provisioned with the existing application schema.
-    # Record the schema baseline instead of replaying CREATE TABLE migrations.
-    command.stamp(cfg, "009")
-else:
+try:
     command.upgrade(cfg, "head")
+except ProgrammingError as exc:
+    message = str(exc)
+    if 'DuplicateTable' in message or 'already exists' in message:
+        # The production database was provisioned with the application schema
+        # already present but without Alembic history. Record that baseline
+        # instead of replaying CREATE TABLE migrations.
+        command.stamp(cfg, "009")
+    else:
+        raise
