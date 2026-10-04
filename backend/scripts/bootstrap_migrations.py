@@ -1,22 +1,26 @@
-import sys
 from pathlib import Path
+import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from alembic import command
 from alembic.config import Config
-from sqlalchemy import inspect
+from sqlalchemy import text
 from app.db.database import engine
 
 cfg = Config("alembic.ini")
 
 with engine.connect() as connection:
-    tables = set(inspect(connection).get_table_names())
+    has_version = connection.execute(
+        text("SELECT to_regclass('public.alembic_version') IS NOT NULL")
+    ).scalar()
+    has_profiles = connection.execute(
+        text("SELECT to_regclass('public.profiles') IS NOT NULL")
+    ).scalar()
 
-if "alembic_version" not in tables and "profiles" in tables:
-    # The production database was provisioned from the existing application
-    # schema rather than from Alembic. Record the schema baseline without
-    # replaying CREATE TABLE migrations against existing relations.
+if not has_version and has_profiles:
+    # Production was provisioned with the existing application schema.
+    # Record the schema baseline instead of replaying CREATE TABLE migrations.
     command.stamp(cfg, "009")
 else:
     command.upgrade(cfg, "head")
