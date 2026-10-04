@@ -7,7 +7,7 @@ network and never mount the Docker socket into the public API service.
 
 import hmac
 import logging
-import subprocess
+import shutil
 import threading
 
 from fastapi import FastAPI, Header, HTTPException
@@ -45,15 +45,8 @@ def readiness_check(authorization: str | None = Header(default=None)):
     expected = f"Bearer {settings.HDL_WORKER_TOKEN}"
     if not authorization or not hmac.compare_digest(authorization, expected):
         raise HTTPException(status_code=401, detail="Unauthorized worker request.")
-    if not ExecutionRunner._is_docker_daemon_running():
-        raise HTTPException(status_code=503, detail="Docker is unavailable.")
-    image = subprocess.run(
-        ["docker", "image", "inspect", settings.HDL_SANDBOX_IMAGE],
-        capture_output=True,
-        timeout=5,
-    )
-    if image.returncode != 0:
-        raise HTTPException(status_code=503, detail="Sandbox image is unavailable.")
+    if not shutil.which("iverilog"):
+        raise HTTPException(status_code=503, detail="Icarus Verilog is unavailable.")
     return {"status": "ready"}
 
 
@@ -71,7 +64,7 @@ def execute_job(
         raise HTTPException(status_code=429, detail="Execution worker is busy.")
 
     try:
-        runner = ExecutionRunner(use_docker=True)
+        runner = ExecutionRunner(use_docker=False)
         response = runner.execute(
             ExecutionJob(
                 problem_slug=job.problem_slug,
