@@ -9,6 +9,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app ./app
 COPY alembic ./alembic
 COPY alembic.ini ./
+COPY scripts ./scripts
 
 ENV PYTHONUNBUFFERED=1 ENVIRONMENT=production
 USER 10001:10001
