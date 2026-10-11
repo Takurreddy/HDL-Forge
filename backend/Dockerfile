@@ -9,8 +9,16 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app ./app
 COPY alembic ./alembic
 COPY alembic.ini ./
+<<<<<<< HEAD
+=======
+COPY scripts ./scripts
+>>>>>>> e70e200aebeb6d63640b8c70100d6206027970c9
 
 ENV PYTHONUNBUFFERED=1 ENVIRONMENT=production
 USER 10001:10001
 EXPOSE 8000
+<<<<<<< HEAD
 CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+=======
+CMD ["sh", "-c", "python scripts/bootstrap_migrations.py && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+>>>>>>> e70e200aebeb6d63640b8c70100d6206027970c9

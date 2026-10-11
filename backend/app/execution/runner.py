@@ -30,11 +30,15 @@ class ExecutionRunner:
         if use_docker is None:
             use_docker = getattr(settings, "HDL_USE_DOCKER", True)
         self.use_docker = bool(use_docker)
+<<<<<<< HEAD
         self.sandbox = (
             DockerSandbox()
             if self.use_docker and not settings.HDL_WORKER_URL and self._is_docker_daemon_running()
             else None
         )
+=======
+        self.sandbox = None
+>>>>>>> e70e200aebeb6d63640b8c70100d6206027970c9
 
     @staticmethod
     def _is_docker_daemon_running() -> bool:
@@ -68,6 +72,7 @@ class ExecutionRunner:
                 settings.SIMULATOR, workspace=workspace, limits=job.limits
             )
 
+<<<<<<< HEAD
             if self.use_docker and self.sandbox is None:
                 result = SimulationResult(
                     status=SimulationStatus.SYSTEM_ERROR,
@@ -76,6 +81,13 @@ class ExecutionRunner:
             elif self.use_docker:
                 assert self.sandbox is not None
                 result = self._execute_in_sandbox(workspace, job, simulator)
+=======
+            if self.use_docker:
+                result = SimulationResult(
+                    status=SimulationStatus.SYSTEM_ERROR,
+                    message="Docker sandbox execution is unavailable on this worker.",
+                )
+>>>>>>> e70e200aebeb6d63640b8c70100d6206027970c9
             else:
                 result = self._execute_direct(
                     workspace, job, simulator, job.waveform_enabled
